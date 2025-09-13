@@ -1,0 +1,28 @@
+var builder = WebApplication.CreateBuilder(args);
+
+var articlesAssembly = typeof(Y.Articles.Presentation.AssemblyReference).Assembly;
+var threadsAssembly = typeof(Y.Threads.Presentation.AssemblyReference).Assembly;
+
+builder.Services
+    .AddControllers()
+    .AddApplicationPart(articlesAssembly)
+    .AddApplicationPart(threadsAssembly);
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();
