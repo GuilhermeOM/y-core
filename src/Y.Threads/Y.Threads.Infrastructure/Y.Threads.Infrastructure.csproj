@@ -6,4 +6,15 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.9" />
+    <PackageReference Include="MongoDB.Driver" Version="3.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Y.Articles\Y.Articles.Domain\Y.Articles.Domain.csproj" />
+    <ProjectReference Include="..\Y.Threads.Domain\Y.Threads.Domain.csproj" />
+  </ItemGroup>
+
 </Project>
