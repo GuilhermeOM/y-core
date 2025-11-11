@@ -1,3 +1,6 @@
+using Microsoft.Extensions.Hosting;
+using Y.Threads.Infrastructure.Background;
+
 var builder = WebApplication.CreateBuilder(args);
 
 Y.Threads.Infrastructure.DependencyInjection.AddInfrastructure(builder.Services, builder.Configuration);
