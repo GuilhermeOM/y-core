@@ -3,7 +3,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Y.Threads.Domain.Entities;
 using Y.Threads.Infrastructure.Persistence;
-using Y.Threads.Infrastructure.Persistence.Configurations;
 using Y.Threads.Infrastructure.Persistence.Configurations.Base;
 
 namespace Y.Threads.Infrastructure.Background;

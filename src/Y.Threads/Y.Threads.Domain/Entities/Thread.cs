@@ -3,7 +3,6 @@
 namespace Y.Threads.Domain.Entities;
 public sealed class Thread : Entity
 {
-    public long Depth { get; set; }
     public Guid PostId { get; set; }
     public long LikeAmount { get; set; }
     public long ReplyAmount { get; set; }

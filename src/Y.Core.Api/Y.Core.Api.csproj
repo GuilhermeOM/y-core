@@ -1,23 +1,28 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>b2ab2c45-e3b3-4991-b95d-55dbd755329e</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.11" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.11.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Y.Articles\Y.Articles.Application\Y.Articles.Application.csproj" />
     <ProjectReference Include="..\Y.Articles\Y.Articles.Domain\Y.Articles.Domain.csproj" />
     <ProjectReference Include="..\Y.Articles\Y.Articles.Infrastructure\Y.Articles.Infrastructure.csproj" />
     <ProjectReference Include="..\Y.Articles\Y.Articles.Presentation\Y.Articles.Presentation.csproj" />
+    <ProjectReference Include="..\Y.Profiles\Y.Profiles.Application\Y.Profiles.Application.csproj" />
     <ProjectReference Include="..\Y.Profiles\Y.Profiles.Domain\Y.Profiles.Domain.csproj" />
     <ProjectReference Include="..\Y.Profiles\Y.Profiles.Infrastructure\Y.Profiles.Infrastructure.csproj" />
     <ProjectReference Include="..\Y.Profiles\Y.Profiles.Presentation\Y.Profiles.Presentation.csproj" />
+    <ProjectReference Include="..\Y.Threads\Y.Threads.Application\Y.Threads.Application.csproj" />
     <ProjectReference Include="..\Y.Threads\Y.Threads.Domain\Y.Threads.Domain.csproj" />
     <ProjectReference Include="..\Y.Threads\Y.Threads.Infrastructure\Y.Threads.Infrastructure.csproj" />
     <ProjectReference Include="..\Y.Threads\Y.Threads.Presentation\Y.Threads.Presentation.csproj" />
