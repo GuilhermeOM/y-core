@@ -42,7 +42,7 @@ public sealed class PostController : ApiController
         {
             Author = GetAuthorFromAuthorization(),
             Text = request.Text,
-            Medias = request.Medias ?? [],
+            Medias = request.Medias,
             Parent = request.Parent ?? Guid.Empty
         };
 

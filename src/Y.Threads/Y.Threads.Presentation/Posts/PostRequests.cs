@@ -3,5 +3,5 @@
 namespace Y.Threads.Presentation.Posts;
 public static class PostRequests
 {
-    public sealed record CreatePostRequest(string Text, IFormFile[]? Medias, Guid? Parent);
+    public sealed record CreatePostRequest(string Text, List<IFormFile> Medias, Guid? Parent = null);
 }

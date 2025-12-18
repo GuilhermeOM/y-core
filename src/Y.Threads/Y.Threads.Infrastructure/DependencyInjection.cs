@@ -6,11 +6,13 @@ using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 using Y.Core.SharedKernel.Abstractions;
 using Y.Threads.Domain.Repositories;
+using Y.Threads.Domain.Services;
 using Y.Threads.Infrastructure.Background;
 using Y.Threads.Infrastructure.DomainEvents;
 using Y.Threads.Infrastructure.Persistence;
 using Y.Threads.Infrastructure.Persistence.Configurations.Base;
 using Y.Threads.Infrastructure.Persistence.Repositories;
+using Y.Threads.Infrastructure.Services;
 
 namespace Y.Threads.Infrastructure;
 public static class DependencyInjection
@@ -21,7 +23,9 @@ public static class DependencyInjection
             .AddPersistence(configuration)
             .AddRepositories()
             .AddBackgroundServices()
-            .AddDomainEventsDispatcher();
+            .AddDomainEventsDispatcher()
+            .AddSupabase(configuration)
+            .AddServices();
     }
 
     public static IServiceCollection AddBackgroundServices(this IServiceCollection services)
@@ -64,6 +68,26 @@ public static class DependencyInjection
     private static IServiceCollection AddDomainEventsDispatcher(this IServiceCollection services)
     {
         services.AddTransient<IDomainEventsDispatcher, DomainEventsDispatcher>();
+        return services;
+    }
+
+    public static IServiceCollection AddSupabase(this IServiceCollection services, IConfiguration configuration)
+    {
+        var supabaseUrl = configuration["Supabase:Url"];
+        var supabaseKey = configuration["Supabase:Key"];
+
+        services.AddScoped(provider => new Supabase.Client(supabaseUrl!, supabaseKey, new Supabase.SupabaseOptions
+        {
+            AutoRefreshToken = false
+        }));
+
+        return services;
+    }
+
+    public static IServiceCollection AddServices(this IServiceCollection services)
+    {
+        services.AddScoped<IStorageService, StorageService>();
+
         return services;
     }
 }

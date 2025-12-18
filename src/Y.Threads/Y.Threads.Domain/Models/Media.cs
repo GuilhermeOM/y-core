@@ -2,7 +2,7 @@
 public class Media
 {
     public Guid Id { get; set; }
-    public required string Url { get; set; }
+    public string Url { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public MediaType Type { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -10,6 +10,7 @@ public class Media
 
 public enum MediaType
 {
-    Image = 0,
-    Video = 1
+    Unknown = 0,
+    Image = 1,
+    Video = 2
 }
