@@ -4,7 +4,7 @@ namespace Y.Threads.Domain.Constants;
 
 public static class MediaConstants
 {
-    private static readonly string[] _imageContentTypes =
+    private static readonly string[] _imageMimeTypes =
     [
         "image/jpeg",
         "image/png",
@@ -12,7 +12,7 @@ public static class MediaConstants
         "image/webp"
     ];
 
-    private static readonly string[] _videoContentTypes =
+    private static readonly string[] _videoMimeTypes =
     [
         "video/mp4",
         "video/webm"
@@ -20,12 +20,12 @@ public static class MediaConstants
 
     public static MediaType GetMediaType(string contentType)
     {
-        if (_imageContentTypes.Contains(contentType, StringComparer.OrdinalIgnoreCase))
+        if (_imageMimeTypes.Contains(contentType, StringComparer.OrdinalIgnoreCase))
         {
             return MediaType.Image;
         }
 
-        if (_videoContentTypes.Contains(contentType, StringComparer.OrdinalIgnoreCase))
+        if (_videoMimeTypes.Contains(contentType, StringComparer.OrdinalIgnoreCase))
         {
             return MediaType.Video;
         }
@@ -33,7 +33,7 @@ public static class MediaConstants
         return MediaType.Unknown;
     }
 
-    public static string[] GetAllowedMimes() => [.. _imageContentTypes.Union(_videoContentTypes)];
+    public static string[] GetAllowedMimes() => [.. _imageMimeTypes.Union(_videoMimeTypes)];
 
     public static bool IsSupportedMimeType(string contentType) => GetAllowedMimes().Contains(contentType, StringComparer.OrdinalIgnoreCase);
 }

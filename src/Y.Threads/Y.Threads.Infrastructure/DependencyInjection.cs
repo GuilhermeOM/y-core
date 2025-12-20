@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MimeDetective;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
@@ -25,6 +26,7 @@ public static class DependencyInjection
             .AddBackgroundServices()
             .AddDomainEventsDispatcher()
             .AddSupabase(configuration)
+            .AddFileInspector()
             .AddServices();
     }
 
@@ -80,6 +82,19 @@ public static class DependencyInjection
         {
             AutoRefreshToken = false
         }));
+
+        return services;
+    }
+
+    public static IServiceCollection AddFileInspector(this IServiceCollection services)
+    {
+        services.AddSingleton(provider =>
+        {
+            return new ContentInspectorBuilder()
+            {
+                Definitions = MimeDetective.Definitions.DefaultDefinitions.All()
+            }.Build();
+        });
 
         return services;
     }

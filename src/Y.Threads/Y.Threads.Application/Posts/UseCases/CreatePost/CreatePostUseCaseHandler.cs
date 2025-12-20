@@ -37,7 +37,12 @@ internal sealed class CreatePostUseCaseHandler : IUseCaseHandler<CreatePostUseCa
 
         foreach (var media in request.Medias)
         {
-            var uploadedMedia = await UploadMediaAsync(media, request.Author.Id) ?? throw new InvalidOperationException();
+            var uploadedMedia = await UploadMediaAsync(media, request.Author.Id);
+            if (uploadedMedia is null)
+            {
+                return Result.Failure<Guid>(PostErrors.MediaUploadFailed);
+            }
+
             post.Medias = post.Medias.Append(uploadedMedia);
         }
 
