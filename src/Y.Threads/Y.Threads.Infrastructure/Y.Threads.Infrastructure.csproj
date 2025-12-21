@@ -12,6 +12,7 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.11" />
     <PackageReference Include="Mime-Detective" Version="25.8.1" />
     <PackageReference Include="MongoDB.Driver" Version="3.5.0" />
+    <PackageReference Include="Polly.Extensions" Version="8.6.5" />
     <PackageReference Include="Supabase" Version="1.1.1" />
   </ItemGroup>
 

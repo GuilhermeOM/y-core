@@ -18,7 +18,7 @@ internal sealed class CreatePostValidator : AbstractValidator<CreatePostUseCase>
         RuleForEach(x => x.Medias).ChildRules(fileMedia =>
         {
             fileMedia
-                .RuleFor(x => x.ContentType)
+                .RuleFor(x => x.Media.ContentType)
                 .Must(contentType => MediaConstants.IsSupportedMimeType(contentType))
                 .WithMessage("Unsupported media type.");
         });

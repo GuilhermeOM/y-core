@@ -4,5 +4,6 @@ using Y.Threads.Domain.Models;
 namespace Y.Threads.Domain.Services;
 public interface IStorageService
 {
-    Task<Media?> UploadMediaAsync(Guid userId, Stream stream);
+    Task<Media?> UploadMediaAsync(Guid userId, Stream stream, CancellationToken cancellationToken = default);
+    Task DeleteMediaAsync(Guid userId, Media media);
 }

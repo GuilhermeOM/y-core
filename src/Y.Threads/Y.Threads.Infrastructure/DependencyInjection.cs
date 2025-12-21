@@ -5,6 +5,7 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
+using Polly;
 using Y.Core.SharedKernel.Abstractions;
 using Y.Threads.Domain.Repositories;
 using Y.Threads.Domain.Services;
@@ -13,6 +14,7 @@ using Y.Threads.Infrastructure.DomainEvents;
 using Y.Threads.Infrastructure.Persistence;
 using Y.Threads.Infrastructure.Persistence.Configurations.Base;
 using Y.Threads.Infrastructure.Persistence.Repositories;
+using Y.Threads.Infrastructure.Resilience;
 using Y.Threads.Infrastructure.Services;
 
 namespace Y.Threads.Infrastructure;
@@ -27,7 +29,8 @@ public static class DependencyInjection
             .AddDomainEventsDispatcher()
             .AddSupabase(configuration)
             .AddFileInspector()
-            .AddServices();
+            .AddServices()
+            .AddPipelinePolicies();
     }
 
     public static IServiceCollection AddBackgroundServices(this IServiceCollection services)
@@ -78,10 +81,13 @@ public static class DependencyInjection
         var supabaseUrl = configuration["Supabase:Url"];
         var supabaseKey = configuration["Supabase:Key"];
 
-        services.AddScoped(provider => new Supabase.Client(supabaseUrl!, supabaseKey, new Supabase.SupabaseOptions
+        services.AddSingleton(provider =>
         {
-            AutoRefreshToken = false
-        }));
+            return new Supabase.Client(supabaseUrl!, supabaseKey, new Supabase.SupabaseOptions
+            {
+                AutoConnectRealtime = true
+            });
+        });
 
         return services;
     }
@@ -102,6 +108,13 @@ public static class DependencyInjection
     public static IServiceCollection AddServices(this IServiceCollection services)
     {
         services.AddScoped<IStorageService, StorageService>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddPipelinePolicies(this IServiceCollection services)
+    {
+        services.AddResiliencePipeline(Resiliences.FastDefaultRetryPipelinePolicy, builder => ResilienceBuilder.FastDefaultRetryPipelinePolicy(builder));
 
         return services;
     }

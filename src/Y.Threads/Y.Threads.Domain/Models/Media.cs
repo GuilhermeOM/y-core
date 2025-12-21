@@ -4,6 +4,8 @@ public class Media
     public Guid Id { get; set; }
     public string Url { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public string Mime { get; set; } = string.Empty;
+    public string Extension { get; set; } = string.Empty;
     public MediaType Type { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
