@@ -1,13 +1,9 @@
-﻿using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.JsonWebTokens;
-using Y.Core.SharedKernel.Abstractions;
+using Y.Core.SharedKernel.Abstractions.Messaging;
 using Y.Threads.Application.Posts.UseCases.CreatePost;
 using Y.Threads.Application.Posts.UseCases.GetPostById;
 using Y.Threads.Domain.Entities;
-using Y.Threads.Domain.Models;
 
 namespace Y.Threads.Presentation.Posts;
 

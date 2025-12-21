@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using Y.Core.SharedKernel;
-using Y.Core.SharedKernel.Abstractions;
+using Y.Core.SharedKernel.Abstractions.Messaging;
 using Y.Threads.Domain.DomainEvents;
 using Y.Threads.Domain.Entities;
 using Y.Threads.Domain.Errors;

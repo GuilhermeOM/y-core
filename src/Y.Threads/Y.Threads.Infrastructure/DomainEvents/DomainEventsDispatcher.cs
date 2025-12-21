@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using Microsoft.Extensions.DependencyInjection;
-using Y.Core.SharedKernel.Abstractions;
+using Y.Core.SharedKernel.Abstractions.Messaging;
 
 namespace Y.Threads.Infrastructure.DomainEvents;
 internal sealed class DomainEventsDispatcher : IDomainEventsDispatcher

@@ -1,4 +1,4 @@
-﻿namespace Y.Core.SharedKernel.Abstractions;
+﻿namespace Y.Core.SharedKernel.Abstractions.Messaging;
 public interface IUseCaseHandler<TRequest> where TRequest : IUseCase
 {
     Task<Result> HandleAsync(TRequest request, CancellationToken cancellationToken = default);

@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Y.Threads.Application.Posts.UseCases.CreatePost;
+﻿using Y.Threads.Application.Posts.UseCases.CreatePost;
 
 namespace Y.Threads.Presentation.Posts;
 public static class PostRequests

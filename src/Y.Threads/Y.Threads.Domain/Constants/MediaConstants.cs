@@ -1,7 +1,6 @@
 ﻿using Y.Threads.Domain.Models;
 
 namespace Y.Threads.Domain.Constants;
-
 public static class MediaConstants
 {
     private static readonly string[] _imageMimeTypes =

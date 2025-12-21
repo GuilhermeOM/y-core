@@ -1,4 +1,4 @@
-﻿using Y.Core.SharedKernel.Abstractions;
+﻿using Y.Core.SharedKernel.Abstractions.Messaging;
 using Y.Threads.Domain.DomainEvents;
 using Y.Threads.Domain.Repositories;
 

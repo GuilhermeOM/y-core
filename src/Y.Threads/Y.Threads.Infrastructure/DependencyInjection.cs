@@ -6,7 +6,7 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 using Polly;
-using Y.Core.SharedKernel.Abstractions;
+using Y.Core.SharedKernel.Abstractions.Messaging;
 using Y.Threads.Domain.Repositories;
 using Y.Threads.Domain.Services;
 using Y.Threads.Infrastructure.Background;
