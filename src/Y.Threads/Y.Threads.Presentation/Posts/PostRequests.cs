@@ -1,4 +1,4 @@
-﻿using Y.Threads.Application.Posts.UseCases.CreatePost;
+﻿using Y.Threads.Application.Posts.Commands.CreatePost;
 
 namespace Y.Threads.Presentation.Posts;
 public static class PostRequests

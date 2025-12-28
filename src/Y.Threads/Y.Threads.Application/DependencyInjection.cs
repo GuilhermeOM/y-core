@@ -10,19 +10,30 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services, IConfiguration configuration)
     {
         return services
-            .AddUseCases()
+            .AddCommands()
+            .AddQueries()
             .AddDomainEvents()
             .AddValidators()
             .AddDecorators();
     }
 
-    public static IServiceCollection AddUseCases(this IServiceCollection services)
+    public static IServiceCollection AddCommands(this IServiceCollection services)
     {
         services.Scan(scan => scan.FromAssembliesOf(typeof(DependencyInjection))
-            .AddClasses(classes => classes.AssignableTo(typeof(IUseCaseHandler<>)), publicOnly: false)
+            .AddClasses(classes => classes.AssignableTo(typeof(ICommandHandler<>)), publicOnly: false)
                 .AsImplementedInterfaces()
                 .WithScopedLifetime()
-            .AddClasses(classes => classes.AssignableTo(typeof(IUseCaseHandler<,>)), publicOnly: false)
+            .AddClasses(classes => classes.AssignableTo(typeof(ICommandHandler<,>)), publicOnly: false)
+                .AsImplementedInterfaces()
+                .WithScopedLifetime());
+
+        return services;
+    }
+
+    public static IServiceCollection AddQueries(this IServiceCollection services)
+    {
+        services.Scan(scan => scan.FromAssembliesOf(typeof(DependencyInjection))
+            .AddClasses(classes => classes.AssignableTo(typeof(IQueryHandler<,>)), publicOnly: false)
                 .AsImplementedInterfaces()
                 .WithScopedLifetime());
 
@@ -48,11 +59,13 @@ public static class DependencyInjection
     {
         services.TryDecorate(typeof(IDomainEventHandler<>), typeof(LoggingDecorator.DomainEventHandler<>));
 
-        services.TryDecorate(typeof(IUseCaseHandler<>), typeof(ValidationDecorator.ValidationHandler<>));
-        services.TryDecorate(typeof(IUseCaseHandler<,>), typeof(ValidationDecorator.ValidationHandler<,>));
+        services.TryDecorate(typeof(ICommandHandler<>), typeof(ValidationDecorator.CommandValidationHandler<>));
+        services.TryDecorate(typeof(ICommandHandler<,>), typeof(ValidationDecorator.CommandValidationHandler<,>));
+        services.TryDecorate(typeof(IQueryHandler<,>), typeof(ValidationDecorator.QueryValidationHandler<,>));
 
-        services.TryDecorate(typeof(IUseCaseHandler<>), typeof(LoggingDecorator.UseCaseHandler<>));
-        services.TryDecorate(typeof(IUseCaseHandler<,>), typeof(LoggingDecorator.UseCaseHandler<,>));
+        services.TryDecorate(typeof(ICommandHandler<>), typeof(LoggingDecorator.CommandHandler<>));
+        services.TryDecorate(typeof(ICommandHandler<,>), typeof(LoggingDecorator.CommandHandler<,>));
+        services.TryDecorate(typeof(IQueryHandler<,>), typeof(LoggingDecorator.QueryHandler<,>));
 
         return services;
     }

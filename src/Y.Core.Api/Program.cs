@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using Serilog;
+using Y.Core.Api.Middlewares;
 
 var cultureInfo = CultureInfo.CreateSpecificCulture("en-US");
 CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
@@ -17,6 +18,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 try
 {
+    builder.Services.AddSerilog((services, loggerConfiguration) => loggerConfiguration
+        .ReadFrom.Configuration(builder.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext());
+
     ThreadsDependencyInjection();
 
     var profilesPresentationAssembly = typeof(Y.Profiles.Presentation.AssemblyReference).Assembly;
@@ -54,6 +60,8 @@ try
         app.MapOpenApi();
         app.MapScalarApiReference();
     }
+
+    app.UseMiddleware<LoggingCorrelationMiddleware>();
 
     app.UseHttpsRedirection();
 

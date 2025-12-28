@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Y.Articles\Y.Articles.Domain\Y.Articles.Domain.csproj" />
+    <ProjectReference Include="..\Y.Threads.Application\Y.Threads.Application.csproj" />
     <ProjectReference Include="..\Y.Threads.Domain\Y.Threads.Domain.csproj" />
   </ItemGroup>
 

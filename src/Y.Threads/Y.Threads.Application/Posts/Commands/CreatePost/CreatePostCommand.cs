@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Y.Core.SharedKernel.Abstractions.Messaging;
-using Y.Threads.Domain.Entities;
+using Y.Core.SharedKernel.Models;
 
-namespace Y.Threads.Application.Posts.UseCases.CreatePost;
-public sealed class CreatePostUseCase : IUseCase<Guid>
+namespace Y.Threads.Application.Posts.Commands.CreatePost;
+public sealed class CreatePostCommand : ICommand<Guid>
 {
     public string Text { get; set; } = string.Empty;
     public ICollection<CreateMediaPost> Medias { get; set; } = [];

@@ -1,5 +1,5 @@
 ﻿using MongoDB.Driver;
-using Y.Threads.Domain.Entities;
+using Y.Threads.Domain.Aggregates.Post;
 
 namespace Y.Threads.Infrastructure.Persistence;
 internal class AppDataContext
@@ -14,5 +14,5 @@ internal class AppDataContext
     }
 
     public IMongoCollection<Post> Posts => _mongoDatabase.GetCollection<Post>(nameof(Posts));
-    public IMongoCollection<Domain.Entities.Thread> Threads => _mongoDatabase.GetCollection<Domain.Entities.Thread>(nameof(Threads));
+    public IMongoCollection<Application.Threads.Models.Thread> Threads => _mongoDatabase.GetCollection<Application.Threads.Models.Thread>(nameof(Threads));
 }

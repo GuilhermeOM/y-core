@@ -16,4 +16,8 @@
     <ProjectReference Include="..\Y.Threads.Domain\Y.Threads.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Threads\Queries\" />
+  </ItemGroup>
+
 </Project>

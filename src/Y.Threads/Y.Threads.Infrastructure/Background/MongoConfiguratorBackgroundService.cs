@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Y.Threads.Domain.Entities;
+using Y.Threads.Domain.Aggregates.Post;
 using Y.Threads.Infrastructure.Persistence;
 using Y.Threads.Infrastructure.Persistence.Configurations.Base;
 
@@ -31,7 +31,7 @@ internal sealed class MongoConfiguratorBackgroundService : IHostedService
             .ConfigureAsync(context.Posts, cancellationToken);
 
         await scope.ServiceProvider
-            .GetRequiredService<ICollectionConfiguration<Domain.Entities.Thread>>()
+            .GetRequiredService<ICollectionConfiguration<Application.Threads.Models.Thread>>()
             .ConfigureAsync(context.Threads, cancellationToken);
     }
 

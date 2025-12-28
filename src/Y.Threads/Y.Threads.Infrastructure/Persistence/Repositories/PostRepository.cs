@@ -1,5 +1,5 @@
 ﻿using MongoDB.Driver;
-using Y.Threads.Domain.Entities;
+using Y.Threads.Domain.Aggregates.Post;
 using Y.Threads.Domain.Repositories;
 
 namespace Y.Threads.Infrastructure.Persistence.Repositories;

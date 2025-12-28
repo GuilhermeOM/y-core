@@ -1,9 +1,8 @@
-﻿
-using Y.Threads.Domain.Models;
+﻿using Y.Threads.Domain.ValueObjects;
 
 namespace Y.Threads.Domain.Services;
 public interface IStorageService
 {
-    Task<Media?> UploadMediaAsync(Guid userId, Stream stream, CancellationToken cancellationToken = default);
-    Task DeleteMediaAsync(Guid userId, Media media);
+    Task<MediaUpload?> UploadMediaAsync(Guid userId, Stream stream, CancellationToken cancellationToken = default);
+    Task DeleteMediaAsync(Guid userId, MediaUpload media);
 }

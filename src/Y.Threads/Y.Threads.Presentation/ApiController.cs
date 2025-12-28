@@ -4,7 +4,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Y.Core.SharedKernel;
-using Y.Threads.Domain.Entities;
+using Y.Core.SharedKernel.Models;
+using Y.Threads.Domain.Aggregates.Post;
 
 namespace Y.Threads.Presentation;
 

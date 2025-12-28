@@ -7,14 +7,14 @@ using Y.Core.SharedKernel.Abstractions.Messaging;
 namespace Y.Threads.Application.Abstractions.Behaviors;
 internal static class ValidationDecorator
 {
-    internal sealed class ValidationHandler<TRequest> : IUseCaseHandler<TRequest>
-    where TRequest : IUseCase
+    internal sealed class CommandValidationHandler<TRequest> : ICommandHandler<TRequest>
+    where TRequest : ICommand
     {
-        private readonly IUseCaseHandler<TRequest> _innerHandler;
+        private readonly ICommandHandler<TRequest> _innerHandler;
         private readonly IEnumerable<IValidator<TRequest>> _validators;
 
-        public ValidationHandler(
-            IUseCaseHandler<TRequest> innerHandler,
+        public CommandValidationHandler(
+            ICommandHandler<TRequest> innerHandler,
             IEnumerable<IValidator<TRequest>> validators)
         {
             _innerHandler = innerHandler;
@@ -34,14 +34,41 @@ internal static class ValidationDecorator
         }
     }
 
-    internal sealed class ValidationHandler<TRequest, TResponse> : IUseCaseHandler<TRequest, TResponse>
-        where TRequest : IUseCase<TResponse>
+    internal sealed class CommandValidationHandler<TRequest, TResponse> : ICommandHandler<TRequest, TResponse>
+        where TRequest : ICommand<TResponse>
     {
-        private readonly IUseCaseHandler<TRequest, TResponse> _innerHandler;
+        private readonly ICommandHandler<TRequest, TResponse> _innerHandler;
         private readonly IEnumerable<IValidator<TRequest>> _validators;
 
-        public ValidationHandler(
-            IUseCaseHandler<TRequest, TResponse> innerHandler,
+        public CommandValidationHandler(
+            ICommandHandler<TRequest, TResponse> innerHandler,
+            IEnumerable<IValidator<TRequest>> validators)
+        {
+            _innerHandler = innerHandler;
+            _validators = validators;
+        }
+
+        public async Task<Result<TResponse>> HandleAsync(TRequest request, CancellationToken cancellationToken)
+        {
+            var validationFailures = await ValidateAsync(request, _validators);
+
+            if (validationFailures.Length == 0)
+            {
+                return await _innerHandler.HandleAsync(request, cancellationToken);
+            }
+
+            return Result.Failure<TResponse>(CreateValidationError(validationFailures));
+        }
+    }
+
+    internal sealed class QueryValidationHandler<TRequest, TResponse> : IQueryHandler<TRequest, TResponse>
+        where TRequest : IQuery<TResponse>
+    {
+        private readonly IQueryHandler<TRequest, TResponse> _innerHandler;
+        private readonly IEnumerable<IValidator<TRequest>> _validators;
+
+        public QueryValidationHandler(
+            IQueryHandler<TRequest, TResponse> innerHandler,
             IEnumerable<IValidator<TRequest>> validators)
         {
             _innerHandler = innerHandler;

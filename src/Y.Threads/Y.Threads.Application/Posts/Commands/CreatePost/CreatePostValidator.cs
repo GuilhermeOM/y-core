@@ -1,8 +1,8 @@
 ﻿using FluentValidation;
-using Y.Threads.Domain.Constants;
+using Y.Threads.Domain.Aggregates.Post;
 
-namespace Y.Threads.Application.Posts.UseCases.CreatePost;
-internal sealed class CreatePostValidator : AbstractValidator<CreatePostUseCase>
+namespace Y.Threads.Application.Posts.Commands.CreatePost;
+public sealed class CreatePostValidator : AbstractValidator<CreatePostCommand>
 {
     public CreatePostValidator()
     {
@@ -13,13 +13,16 @@ internal sealed class CreatePostValidator : AbstractValidator<CreatePostUseCase>
             .NotEmpty();
 
         RuleFor(x => x.Text).MaximumLength(280);
+        RuleFor(x => x)
+            .Must(post => !string.IsNullOrWhiteSpace(post.Text) || !string.IsNullOrEmpty(post.Text) || post.Medias.Count > 0)
+            .WithMessage("Post must contain text or at least one media.");
 
         RuleFor(x => x.Medias.Count()).LessThanOrEqualTo(4);
         RuleForEach(x => x.Medias).ChildRules(fileMedia =>
         {
             fileMedia
                 .RuleFor(x => x.Media.ContentType)
-                .Must(contentType => MediaConstants.IsSupportedMimeType(contentType))
+                .Must(contentType => Media.IsSupportedMimeType(contentType))
                 .WithMessage("Unsupported media type.");
         });
     }

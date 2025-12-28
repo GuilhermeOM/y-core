@@ -1,4 +1,4 @@
-﻿using Y.Threads.Domain.Entities;
+﻿using Y.Threads.Domain.Aggregates.Post;
 
 namespace Y.Threads.Domain.Repositories;
 public interface IPostRepository

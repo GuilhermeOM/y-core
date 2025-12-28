@@ -1,8 +1,9 @@
 ﻿using MimeDetective;
+using MongoDB.Driver;
 using Polly.Registry;
-using Y.Threads.Domain.Constants;
-using Y.Threads.Domain.Models;
+using Y.Threads.Domain.Aggregates.Post;
 using Y.Threads.Domain.Services;
+using Y.Threads.Domain.ValueObjects;
 using Y.Threads.Infrastructure.Resilience;
 
 namespace Y.Threads.Infrastructure.Services;
@@ -25,7 +26,7 @@ internal sealed class StorageService : IStorageService
         _resiliencePipelineProvider = resiliencePipelineProvider;
     }
 
-    public async Task<Media?> UploadMediaAsync(Guid userId, Stream stream, CancellationToken cancellationToken = default)
+    public async Task<MediaUpload?> UploadMediaAsync(Guid userId, Stream stream, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -36,7 +37,6 @@ internal sealed class StorageService : IStorageService
         var memoryStreamArray = memoryStream.ToArray();
 
         var (Mime, Extension) = InspectFile(memoryStreamArray);
-
         if (string.IsNullOrEmpty(Mime) || string.IsNullOrEmpty(Extension))
         {
             return null;
@@ -45,14 +45,14 @@ internal sealed class StorageService : IStorageService
         return await _resiliencePipelineProvider
             .GetPipeline(Resiliences.FastDefaultRetryPipelinePolicy)
             .ExecuteAsync(async _ =>
-        {
-            return MediaConstants.GetMediaType(Mime) switch
             {
-                MediaType.Image => await UploadImageAsync(userId, memoryStreamArray, Mime, Extension, cancellationToken),
-                MediaType.Video => await UploadVideoAsync(userId, memoryStreamArray, Mime, Extension, cancellationToken),
-                _ => null
-            };
-        }, cancellationToken);
+                return await UploadAsync(
+                    userId,
+                    memoryStreamArray,
+                    Mime,
+                    Extension,
+                    cancellationToken);
+            }, cancellationToken);
     }
 
     private (string? Mime, string? Extension) InspectFile(byte[] data)
@@ -68,7 +68,7 @@ internal sealed class StorageService : IStorageService
         return new(mime, extension);
     }
 
-    private async Task<Media> UploadImageAsync(
+    private async Task<MediaUpload?> UploadAsync(
         Guid userId,
         byte[] data,
         string mime,
@@ -77,66 +77,42 @@ internal sealed class StorageService : IStorageService
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var mediaId = Guid.NewGuid();
-        var mediaPath = CreateMediaPath(userId, mediaId, extension);
+        var mediaName = CreateMediaName(extension);
+        var mediaPath = CreateMediaPath(userId, mediaName);
+        var mediaType = Media.GetMediaTypeByMime(mime);
 
-        await _client.Storage
-            .From(ImageBucket)
-            .Upload(data, mediaPath, new Supabase.Storage.FileOptions { ContentType = mime });
-
-        var url = _client.Storage.From(ImageBucket).GetPublicUrl(mediaPath);
-
-        return new()
-        {
-            Id = mediaId,
-            Url = url,
-            Mime = mime,
-            Extension = extension,
-            Type = MediaType.Image
-        };
-    }
-
-    private async Task<Media> UploadVideoAsync(
-        Guid userId,
-        byte[] data,
-        string mime,
-        string extension,
-        CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-
-        var mediaId = Guid.NewGuid();
-        var mediaPath = CreateMediaPath(userId, mediaId, extension);
-
-        await _client.Storage
-            .From(VideoBucket)
-            .Upload(data, mediaPath, new Supabase.Storage.FileOptions { ContentType = mime });
-
-        var url = _client.Storage.From(ImageBucket).GetPublicUrl(mediaPath);
-
-        return new()
-        {
-            Id = mediaId,
-            Url = url,
-            Mime = mime,
-            Extension = extension,
-            Type = MediaType.Video
-        };
-    }
-
-    public async Task DeleteMediaAsync(Guid userId, Media media)
-    {
-        var bucket = media.Type switch
+        var bucket = mediaType switch
         {
             MediaType.Image => ImageBucket,
             MediaType.Video => VideoBucket,
-            _ => throw new ArgumentOutOfRangeException(nameof(media), "Unsupported media type")
+            _ => null
+        };
+
+        if (bucket is null) return null;
+
+        await _client.Storage
+            .From(bucket)
+            .Upload(data, mediaPath, new Supabase.Storage.FileOptions { ContentType = mime });
+
+        var url = _client.Storage.From(ImageBucket).GetPublicUrl(mediaPath);
+
+        return new(mediaName, url, mime);
+    }
+
+    public async Task DeleteMediaAsync(Guid userId, MediaUpload mediaUpload)
+    {
+        var bucket = Media.GetMediaTypeByMime(mediaUpload.Mime) switch
+        {
+            MediaType.Image => ImageBucket,
+            MediaType.Video => VideoBucket,
+            _ => throw new ArgumentOutOfRangeException(nameof(mediaUpload), "Unsupported media type")
         };
 
         await _client.Storage
             .From(bucket)
-            .Remove(CreateMediaPath(userId, media.Id, media.Extension));
+            .Remove(CreateMediaPath(userId, mediaUpload.Name));
     }
 
-    private static string CreateMediaPath(Guid userId, Guid mediaId, string extension) => $"{userId:N}/{mediaId:N}.{extension}";
+    private static string CreateMediaName(string extension) => $"{Guid.NewGuid():N}.{extension}";
+    private static string CreateMediaPath(Guid userId, string mediaName) => $"{userId:N}/{mediaName}";
 }
