@@ -24,13 +24,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Y.Articles\Y.Articles.Application\Y.Articles.Application.csproj" />
-    <ProjectReference Include="..\..\src\Y.Articles\Y.Articles.Domain\Y.Articles.Domain.csproj" />
     <ProjectReference Include="..\..\src\Y.Articles\Y.Articles.Infrastructure\Y.Articles.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Y.Profiles\Y.Profiles.Application\Y.Profiles.Application.csproj" />
-    <ProjectReference Include="..\..\src\Y.Profiles\Y.Profiles.Domain\Y.Profiles.Domain.csproj" />
     <ProjectReference Include="..\..\src\Y.Profiles\Y.Profiles.Infrastructure\Y.Profiles.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Y.Threads\Y.Threads.Application\Y.Threads.Application.csproj" />
-    <ProjectReference Include="..\..\src\Y.Threads\Y.Threads.Domain\Y.Threads.Domain.csproj" />
     <ProjectReference Include="..\..\src\Y.Threads\Y.Threads.Infrastructure\Y.Threads.Infrastructure.csproj" />
   </ItemGroup>
 
