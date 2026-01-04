@@ -1,0 +1,41 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="FluentAssertions" Version="8.8.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Y.Articles\Y.Articles.Application\Y.Articles.Application.csproj" />
+    <ProjectReference Include="..\..\src\Y.Articles\Y.Articles.Domain\Y.Articles.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Y.Articles\Y.Articles.Infrastructure\Y.Articles.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Y.Profiles\Y.Profiles.Application\Y.Profiles.Application.csproj" />
+    <ProjectReference Include="..\..\src\Y.Profiles\Y.Profiles.Domain\Y.Profiles.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Y.Profiles\Y.Profiles.Infrastructure\Y.Profiles.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Y.Threads\Y.Threads.Application\Y.Threads.Application.csproj" />
+    <ProjectReference Include="..\..\src\Y.Threads\Y.Threads.Domain\Y.Threads.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Y.Threads\Y.Threads.Infrastructure\Y.Threads.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

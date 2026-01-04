@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.3.11312.210 d18.3
+VisualStudioVersion = 18.3.11312.210
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
@@ -46,9 +46,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Y.Profiles.Infrastructure",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Y.Profiles.Presentation", "src\Y.Profiles\Y.Profiles.Presentation\Y.Profiles.Presentation.csproj", "{21059F04-E0AD-45B2-87FD-52E0BC29CC91}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UseCases", "UseCases", "{04E99267-C713-418F-A7CC-772B7AD0F96B}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DomainEvents", "DomainEvents", "{E2D7158A-C0B6-4E32-8E30-ED8813573678}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Y.Core.UnitTest", "tests\Y.Core.UnitTest\Y.Core.UnitTest.csproj", "{C3B8C01D-F5DB-43D0-8A25-177158D8BE67}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -112,6 +110,10 @@ Global
 		{21059F04-E0AD-45B2-87FD-52E0BC29CC91}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{21059F04-E0AD-45B2-87FD-52E0BC29CC91}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{21059F04-E0AD-45B2-87FD-52E0BC29CC91}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C3B8C01D-F5DB-43D0-8A25-177158D8BE67}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C3B8C01D-F5DB-43D0-8A25-177158D8BE67}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C3B8C01D-F5DB-43D0-8A25-177158D8BE67}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C3B8C01D-F5DB-43D0-8A25-177158D8BE67}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -134,8 +136,7 @@ Global
 		{3052912E-EBF2-44A2-A256-32CBAA8063F2} = {E1FF375D-8640-474B-A11E-E031EA746176}
 		{FC3A2562-4F03-41C3-BEE9-C1D589BEB701} = {E1FF375D-8640-474B-A11E-E031EA746176}
 		{21059F04-E0AD-45B2-87FD-52E0BC29CC91} = {E1FF375D-8640-474B-A11E-E031EA746176}
-		{04E99267-C713-418F-A7CC-772B7AD0F96B} = {D38FC98E-E6CD-4232-8DF6-4183A4DDE9D0}
-		{E2D7158A-C0B6-4E32-8E30-ED8813573678} = {D38FC98E-E6CD-4232-8DF6-4183A4DDE9D0}
+		{C3B8C01D-F5DB-43D0-8A25-177158D8BE67} = {D38FC98E-E6CD-4232-8DF6-4183A4DDE9D0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {66C5ED69-AD9E-4176-BF0E-F7A27A2B85FB}

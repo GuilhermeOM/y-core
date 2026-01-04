@@ -41,7 +41,7 @@ public class Post : AggregateRoot
             return Result.Failure<Post>(PostErrors.EmptyAuthor);
         }
 
-        var isPostEmpty = string.IsNullOrEmpty(text) || string.IsNullOrWhiteSpace(text) || medias.Count == 0;
+        var isPostEmpty = (string.IsNullOrEmpty(text) || string.IsNullOrWhiteSpace(text)) && medias.Count == 0;
         if (isPostEmpty)
         {
             return Result.Failure<Post>(PostErrors.EmptyPost);
@@ -63,7 +63,7 @@ public class Post : AggregateRoot
 
     public Result AddMedia(MediaUpload media)
     {
-        if (_medias.Count == MaxAllowedMedias)
+        if (_medias.Count > MaxAllowedMedias)
         {
             return Result.Failure(PostErrors.MaxMediaExceeded);
         }
