@@ -52,10 +52,10 @@ internal sealed class PostLikeRequestConsumerHandler : IMessageHandler<PostLikeR
                 return;
             }
 
-            var likePost = post.Like(message.UserId);
-            if (likePost.IsFailure)
+            var likePostResult = post.Like(message.UserId);
+            if (likePostResult.IsFailure)
             {
-                _logger.LogError("Post can not be liked. Error {@Error}", likePost.Error);
+                _logger.LogError("Post can not be liked. Error {@Error}", likePostResult.Error);
                 return;
             }
 

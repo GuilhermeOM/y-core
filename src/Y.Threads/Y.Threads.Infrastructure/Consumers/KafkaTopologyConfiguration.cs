@@ -29,7 +29,7 @@ internal static class KafkaTopologyConfiguration
     public static IClusterConfigurationBuilder ConfigureTopics(this IClusterConfigurationBuilder cluster)
     {
         return cluster
-            .CreateTopicIfNotExists(KafkaConstants.Topics.PostLikeTopic, 1, 1);
+            .CreateTopicIfNotExists(KafkaConstants.Topics.PostLikeTopic, 2, 1);
     }
 
     public static IClusterConfigurationBuilder ConfigureProducers(this IClusterConfigurationBuilder cluster)

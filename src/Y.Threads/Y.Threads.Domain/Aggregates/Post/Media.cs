@@ -33,7 +33,6 @@ public class Media : Entity
 
         return Result.Success(new Media
         {
-            Id = Guid.NewGuid(),
             Name = uploadMedia.Name,
             Mime = uploadMedia.Mime,
             Url = uploadMedia.Url,

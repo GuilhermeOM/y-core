@@ -4,5 +4,5 @@ namespace Y.Threads.Application.Posts.Commands.LikePost;
 public sealed class LikePostCommand : ICommand
 {
     public required Guid PostId { get; set; }
-    public Guid AuthorId { get; set; }
+    public Guid UserId { get; set; }
 }

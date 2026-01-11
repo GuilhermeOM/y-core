@@ -31,8 +31,14 @@ internal sealed class MongoConfiguratorBackgroundService : IHostedService
             .ConfigureAsync(context.Posts, cancellationToken);
 
         await scope.ServiceProvider
+            .GetRequiredService<ICollectionConfiguration<PostLike>>()
+            .ConfigureAsync(context.PostLikes, cancellationToken);
+
+        await scope.ServiceProvider
             .GetRequiredService<ICollectionConfiguration<Application.Threads.Models.Thread>>()
             .ConfigureAsync(context.Threads, cancellationToken);
+
+        _logger.LogInformation("Mongo collections configuration successfully completed");
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

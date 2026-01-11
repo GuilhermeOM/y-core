@@ -18,7 +18,7 @@ internal sealed class LikePostCommandHandler : ICommandHandler<LikePostCommand>
     {
         var @event = new PostLikeRequestEvent
         {
-            UserId = command.AuthorId,
+            UserId = command.UserId,
             PostId = command.PostId,
         };
 

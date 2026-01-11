@@ -22,7 +22,7 @@ internal sealed class KafkaBusStartBackgroundService : IHostedService
 
         await _kafkaBus.StartAsync(cancellationToken);
 
-        _logger.LogInformation("Kafka bus started successfully");
+        _logger.LogInformation("Kafka bus successfully started");
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)

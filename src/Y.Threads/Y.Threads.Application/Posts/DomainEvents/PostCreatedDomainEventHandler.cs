@@ -16,14 +16,11 @@ internal sealed class PostCreatedDomainEventHandler : IDomainEventHandler<PostCr
 
     public async Task HandleAsync(PostCreatedEvent domainEvent, CancellationToken cancellationToken = default)
     {
-        var thread = new Threads.Models.Thread
-        {
-            Id = domainEvent.PostId,
-            Author = domainEvent.Author,
-            Text = domainEvent.Text,
-            Medias = [.. domainEvent.Medias.Select(ToMediaSnapshot)],
-            Depth = 0,
-        };
+        var thread = new Threads.Models.Thread(
+            domainEvent.PostId,
+            domainEvent.Author,
+            domainEvent.Text,
+            [.. domainEvent.Medias.Select(ToMediaSnapshot)]);
 
         await _threadRepository.CreateAsync(thread, cancellationToken);
     }

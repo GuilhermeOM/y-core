@@ -80,7 +80,7 @@ public class Post : AggregateRoot
     {
         if (Status != PostStatus.Published)
         {
-            return Result.Failure(PostErrors.PostLikeUnpublishedState);
+            return Result.Failure(PostErrors.LikeUnpublishedPost);
         }
 
         RaiseDomainEvent(new PostLikedEvent(Id, userId));
