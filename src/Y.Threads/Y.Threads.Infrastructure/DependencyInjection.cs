@@ -53,13 +53,10 @@ public static class DependencyInjection
     {
         var connectionString = configuration.GetConnectionString("DatabaseConnection");
 
-        services.AddSingleton<IMongoClient>(_ => new MongoClient(connectionString));
+        var client = new MongoClient(connectionString);
 
-        services.AddScoped(implementation =>
-        {
-            var mongoClient = implementation.GetRequiredService<IMongoClient>();
-            return new AppDataContext(mongoClient);
-        });
+        services.AddScoped(_ => new AppDataContext(client));
+        services.AddScoped<IUnitOfWork, UnitOfWork>(_ => new UnitOfWork(client));
 
         services.Scan(scan => scan
             .FromAssembliesOf(typeof(AssemblyReference))

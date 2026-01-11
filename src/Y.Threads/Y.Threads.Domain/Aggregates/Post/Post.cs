@@ -86,4 +86,15 @@ public class Post : AggregateRoot
         RaiseDomainEvent(new PostLikedEvent(Id, userId));
         return Result.Success();
     }
+
+    public Result Hide()
+    {
+        if (Status != PostStatus.Published)
+        {
+            return Result.Failure(PostErrors.LikeUnpublishedPost);
+        }
+
+        Status = PostStatus.Hidden;
+        return Result.Success();
+    }
 }

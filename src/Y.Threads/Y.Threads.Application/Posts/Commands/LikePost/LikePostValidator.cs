@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using FluentValidation;
 
 namespace Y.Threads.Application.Posts.Commands.LikePost;
-
-internal class LikePostValidator
+public sealed class LikePostValidator : AbstractValidator<LikePostCommand>
 {
+    public LikePostValidator()
+    {
+        RuleFor(x => x.UserId).NotEmpty();
+        RuleFor(x => x.PostId).NotEmpty();
+    }
 }

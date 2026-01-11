@@ -374,7 +374,7 @@ public class CreatePostCommandHandlerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(mediaUploads[1]);
 
-        var postResultMock = Post.Create(command.Author.Id, command.Text, mediaUploads);
+        var postResultMock = Post.Create(command.Author, command.Text, mediaUploads);
 
         _postRepositoryMock
             .Setup(mock => mock.CreateAsync(
@@ -448,7 +448,7 @@ public class CreatePostCommandHandlerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(mediaUploads[1]);
 
-        var postResultMock = Post.Create(command.Author.Id, command.Text, mediaUploads);
+        var postResultMock = Post.Create(command.Author, command.Text, mediaUploads);
         var postId = Guid.NewGuid();
 
         _postRepositoryMock
@@ -509,7 +509,7 @@ public class CreatePostCommandHandlerTests
             }
         };
 
-        var postResultMock = Post.Create(command.Author.Id, command.Text);
+        var postResultMock = Post.Create(command.Author, command.Text);
         var postId = Guid.NewGuid();
 
         _postRepositoryMock
@@ -598,7 +598,7 @@ public class CreatePostCommandHandlerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(mediaUploads[1]);
 
-        var postResultMock = Post.Create(command.Author.Id, command.Text, mediaUploads);
+        var postResultMock = Post.Create(command.Author, command.Text, mediaUploads);
         var postId = Guid.NewGuid();
 
         _postRepositoryMock
