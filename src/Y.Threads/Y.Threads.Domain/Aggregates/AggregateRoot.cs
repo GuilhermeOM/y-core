@@ -1,4 +1,3 @@
 ﻿namespace Y.Threads.Domain.Aggregates;
 
-public class AggregateRoot : Entity;
-
+public abstract class AggregateRoot : Entity;

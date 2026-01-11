@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using KafkaFlow;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;

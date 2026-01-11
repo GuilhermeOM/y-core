@@ -6,11 +6,16 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 using Polly;
+using RedLockNet;
+using RedLockNet.SERedis;
+using RedLockNet.SERedis.Configuration;
+using StackExchange.Redis;
 using Y.Core.SharedKernel.Abstractions.Messaging;
 using Y.Threads.Application.Threads.Abstractions;
 using Y.Threads.Domain.Repositories;
 using Y.Threads.Domain.Services;
 using Y.Threads.Infrastructure.Background;
+using Y.Threads.Infrastructure.Consumers;
 using Y.Threads.Infrastructure.DomainEvents;
 using Y.Threads.Infrastructure.Persistence;
 using Y.Threads.Infrastructure.Persistence.Configurations.Base;
@@ -31,12 +36,16 @@ public static class DependencyInjection
             .AddSupabase(configuration)
             .AddFileInspector()
             .AddServices()
-            .AddPipelinePolicies();
+            .AddPipelinePolicies()
+            .AddKafka(configuration)
+            .AddRedis(configuration);
     }
 
-    public static IServiceCollection AddBackgroundServices(this IServiceCollection services)
+    private static IServiceCollection AddBackgroundServices(this IServiceCollection services)
     {
         services.AddHostedService<MongoConfiguratorBackgroundService>();
+        services.AddHostedService<KafkaBusStartBackgroundService>();
+
         return services;
     }
 
@@ -77,7 +86,7 @@ public static class DependencyInjection
         return services;
     }
 
-    public static IServiceCollection AddSupabase(this IServiceCollection services, IConfiguration configuration)
+    private static IServiceCollection AddSupabase(this IServiceCollection services, IConfiguration configuration)
     {
         var supabaseUrl = configuration["Supabase:Url"];
         var supabaseKey = configuration["Supabase:Key"];
@@ -93,7 +102,7 @@ public static class DependencyInjection
         return services;
     }
 
-    public static IServiceCollection AddFileInspector(this IServiceCollection services)
+    private static IServiceCollection AddFileInspector(this IServiceCollection services)
     {
         services.AddSingleton(provider =>
         {
@@ -106,16 +115,55 @@ public static class DependencyInjection
         return services;
     }
 
-    public static IServiceCollection AddServices(this IServiceCollection services)
+    private static IServiceCollection AddServices(this IServiceCollection services)
     {
         services.AddScoped<IStorageService, StorageService>();
+        services.AddScoped<IProducerService, ProducerService>();
 
         return services;
     }
 
-    public static IServiceCollection AddPipelinePolicies(this IServiceCollection services)
+    private static IServiceCollection AddPipelinePolicies(this IServiceCollection services)
     {
         services.AddResiliencePipeline(Resiliences.FastDefaultRetryPipelinePolicy, builder => ResilienceBuilder.FastDefaultRetryPipelinePolicy(builder));
+
+        return services;
+    }
+
+    private static IServiceCollection AddKafka(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.ConfigureKafkaTopology(configuration);
+
+        return services;
+    }
+
+    public static IServiceCollection AddRedis(this IServiceCollection services, IConfiguration configuration)
+    {
+        var endpointsConfiguration = configuration.GetRequiredSection("Redis:Endpoints").Get<string[]>();
+        var endpoints = new EndPointCollection();
+
+        foreach (var endpoint in endpointsConfiguration!)
+        {
+            endpoints.Add(endpoint);
+        }
+
+        var options = new ConfigurationOptions
+        {
+            EndPoints = endpoints,
+            ConnectRetry = 5,
+            ReconnectRetryPolicy = new ExponentialRetry(500, 2000)
+        };
+
+        var connectionMultiplexer = ConnectionMultiplexer.Connect(options);
+
+        services.AddSingleton<IConnectionMultiplexer>(connectionMultiplexer);
+        services.AddSingleton<IDistributedLockFactory>(provider =>
+        {
+            return RedLockFactory.Create(
+            [
+                new RedLockMultiplexer(connectionMultiplexer)
+            ]);
+        });
 
         return services;
     }

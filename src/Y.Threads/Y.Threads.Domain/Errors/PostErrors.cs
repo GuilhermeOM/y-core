@@ -9,6 +9,10 @@ public static class PostErrors
     public static Error EmptyPost => new("EMPTY_POST", "Post cannot be empty");
     public static Error UnsupportedMediaType => new("UNSUPPORTED_MEDIA_TYPE", "The media type is not supported");
     public static Error MaxMediaExceeded => new("MAX_MEDIA_EXCEEDED", $"A post cannot have more than {Post.MaxAllowedMedias} medias");
+    public static Error PostAlreadyLiked => new("POST_ALREADY_LIKED", "Post cannot be liked twice by the same user");
+    public static Error PostNotLiked => new("POST_NOT_LIKED", "Post can not be unliked if not liked");
+    public static Error PostLikeUnpublishedState => new("POST_LIKE_UNPUBLISHED_STATE", "Post can not be liked when state is not published");
+
 
     public static Error PostNotFound => new(HttpStatusCode.NotFound, "POST_NOT_FOUND", "Post not found");
     public static Error PostCreationFailed => new(HttpStatusCode.InternalServerError, "POST_CREATION_FAILED", "Post creation failed");

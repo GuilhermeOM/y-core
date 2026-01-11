@@ -1,5 +1,7 @@
 ﻿using Y.Core.SharedKernel;
+using Y.Core.SharedKernel.Models;
 using Y.Threads.Domain.Errors;
+using Y.Threads.Domain.Events;
 using Y.Threads.Domain.ValueObjects;
 
 namespace Y.Threads.Domain.Aggregates.Post;
@@ -13,16 +15,10 @@ public class Post : AggregateRoot
     public Guid Parent { get; private set; } = Guid.Empty;
     public PostStatus Status { get; private set; }
     public string Text { get; private set; } = string.Empty;
-    public long LikeAmount { get; private set; }
-    public long ReplyAmount { get; private set; }
     public IReadOnlyCollection<Media> Medias
     {
         get => [.. _medias];
         private set => _medias = [.. value];
-    }
-
-    private Post()
-    {
     }
 
     private Post(Guid authorId, string text, PostStatus status)
@@ -32,11 +28,11 @@ public class Post : AggregateRoot
         Status = status;
     }
 
-    public static Result<Post> Create(Guid authorId, string text = "", IReadOnlyCollection<MediaUpload>? medias = null)
+    public static Result<Post> Create(Author author, string text = "", IReadOnlyCollection<MediaUpload>? medias = null)
     {
         medias ??= [];
 
-        if (authorId == Guid.Empty)
+        if (author is null || author.Id == Guid.Empty)
         {
             return Result.Failure<Post>(PostErrors.EmptyAuthor);
         }
@@ -47,7 +43,7 @@ public class Post : AggregateRoot
             return Result.Failure<Post>(PostErrors.EmptyPost);
         }
 
-        var post = new Post(authorId, text, PostStatus.Published);
+        var post = new Post(author.Id, text, PostStatus.Published);
 
         foreach (var media in  medias)
         {
@@ -57,6 +53,8 @@ public class Post : AggregateRoot
                 return Result.Failure<Post>(postMediaResult.Error);
             }
         }
+
+        post.RaiseDomainEvent(new PostCreatedEvent(post.Id, author, post.Text, post.Medias));
 
         return Result.Success(post);
     }
@@ -75,6 +73,17 @@ public class Post : AggregateRoot
         }
 
         _medias.Add(postMediaResult.Value);
+        return Result.Success();
+    }
+
+    public Result Like(Guid userId)
+    {
+        if (Status != PostStatus.Published)
+        {
+            return Result.Failure(PostErrors.PostLikeUnpublishedState);
+        }
+
+        RaiseDomainEvent(new PostLikedEvent(Id, userId));
         return Result.Success();
     }
 }

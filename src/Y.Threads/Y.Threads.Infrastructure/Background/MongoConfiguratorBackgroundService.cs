@@ -21,7 +21,7 @@ internal sealed class MongoConfiguratorBackgroundService : IHostedService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Iniciando configuração das collections do mongo. Assembly {AssemblyName}", typeof(AssemblyReference).Name);
+        _logger.LogInformation("Starting mongo collections configuration");
 
         using var scope = _serviceProvider.CreateAsyncScope();
         var context = scope.ServiceProvider.GetRequiredService<AppDataContext>();
@@ -35,9 +35,5 @@ internal sealed class MongoConfiguratorBackgroundService : IHostedService
             .ConfigureAsync(context.Threads, cancellationToken);
     }
 
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        _logger.LogInformation("Finalizando configuração das collections do mongo. Assembly {AssemblyName}", typeof(AssemblyReference).Name);
-        return Task.CompletedTask;
-    }
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }
