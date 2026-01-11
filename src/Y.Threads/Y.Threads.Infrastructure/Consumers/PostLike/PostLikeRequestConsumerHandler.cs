@@ -7,7 +7,7 @@ using Y.Threads.Domain.Events;
 using Y.Threads.Domain.Repositories;
 
 namespace Y.Threads.Infrastructure.Consumers.PostLike;
-internal sealed partial class PostLikeRequestConsumerHandler : IMessageHandler<PostLikeRequestEvent>
+internal sealed class PostLikeRequestConsumerHandler : IMessageHandler<PostLikeRequestEvent>
 {
     private readonly ILogger<PostLikeRequestConsumerHandler> _logger;
     private readonly IPostRepository _postRepository;
