@@ -12,9 +12,14 @@ internal class PostLikeConfiguration : ICollectionConfiguration<PostLike>
             .Ascending(thread => thread.PostId)
             .Ascending(thread => thread.UserId);
 
+        var indexOptions = new CreateIndexOptions
+        {
+            Unique = true
+        };
+
         await collection.Indexes.CreateManyAsync(
         [
-            new CreateIndexModel<PostLike>(postUserIndex)
+            new CreateIndexModel<PostLike>(postUserIndex, indexOptions)
         ], cancellationToken);
     }
 }
