@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using Moq;
+using Y.Core.SharedKernel.Models;
 using Y.Threads.Application.Posts.Queries.GetPostById;
 using Y.Threads.Domain.Aggregates.Post;
 using Y.Threads.Domain.Errors;
@@ -43,7 +44,8 @@ public class GetPostByIdQueryHandlerTests
         // Arrange
         var query = new GetPostByIdQuery(Guid.NewGuid());
 
-        var post = Post.Create(Guid.NewGuid(), "Dummy text").Value;
+        var author = new Author { Id = Guid.NewGuid() };
+        var post = Post.Create(author,  "Dummy text").Value;
 
         _postRepositoryMock
             .Setup(repo => repo.GetByIdAsync(query.Id, It.IsAny<CancellationToken>()))

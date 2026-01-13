@@ -27,7 +27,7 @@ public class PostCreatedDomainEventHandlerTests
     {
         // Arrange
         var post = Post.Create(
-            Guid.NewGuid(),
+            new Author { Id = Guid.NewGuid() },
             "Dummy text",
             [new MediaUpload(string.Empty, string.Empty, "image/jpeg")]);
 

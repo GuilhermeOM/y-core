@@ -1,8 +1,10 @@
-﻿using Y.Core.SharedKernel.Models;
+﻿using Y.Core.SharedKernel;
+using Y.Core.SharedKernel.Models;
 using Y.Threads.Domain.Aggregates;
 using Y.Threads.Domain.Aggregates.Post;
 
 namespace Y.Threads.Application.Threads.Models;
+
 public sealed class Thread : Entity
 {
     public Author Author { get; init; } = null!;
@@ -11,6 +13,18 @@ public sealed class Thread : Entity
     public long Depth { get; init; }
     public long LikeAmount { get; init; }
     public long ReplyAmount { get; init; }
+
+    public Thread(
+        Guid postId,
+        Author author,
+        string text,
+        IReadOnlyCollection<MediaSnapshot> medias)
+    {
+        Id = postId;
+        Author = author;
+        Text = text;
+        Medias = medias;
+    }
 }
 
 public sealed class MediaSnapshot

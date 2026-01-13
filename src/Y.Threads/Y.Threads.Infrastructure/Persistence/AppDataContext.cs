@@ -14,5 +14,6 @@ internal class AppDataContext
     }
 
     public IMongoCollection<Post> Posts => _mongoDatabase.GetCollection<Post>(nameof(Posts));
+    public IMongoCollection<PostLike> PostLikes => _mongoDatabase.GetCollection<PostLike>(nameof(PostLikes));
     public IMongoCollection<Application.Threads.Models.Thread> Threads => _mongoDatabase.GetCollection<Application.Threads.Models.Thread>(nameof(Threads));
 }

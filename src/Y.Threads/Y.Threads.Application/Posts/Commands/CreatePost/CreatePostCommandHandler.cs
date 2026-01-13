@@ -4,7 +4,6 @@ using Y.Core.SharedKernel;
 using Y.Core.SharedKernel.Abstractions.Messaging;
 using Y.Threads.Domain.Aggregates.Post;
 using Y.Threads.Domain.Errors;
-using Y.Threads.Domain.Events;
 using Y.Threads.Domain.Repositories;
 using Y.Threads.Domain.Services;
 
@@ -42,7 +41,7 @@ internal sealed class CreatePostCommandHandler : ICommandHandler<CreatePostComma
                 return Result.Failure<Guid>(PostErrors.MediaUploadFailed);
             }
 
-            var postCreationResult = Post.Create(command.Author.Id, command.Text, uploadedMedias);
+            var postCreationResult = Post.Create(command.Author, command.Text, uploadedMedias);
             if (postCreationResult.IsFailure)
             {
                 await mediaUploadManager.RollbackAsync(command.Author.Id);
@@ -56,14 +55,7 @@ internal sealed class CreatePostCommandHandler : ICommandHandler<CreatePostComma
                 return Result.Failure<Guid>(PostErrors.PostCreationFailed);
             }
 
-            await _domainEventsDispatcher.DispatchAsync(
-            [
-                new PostCreatedEvent(
-                    postCreationResult.Value.Id,
-                    command.Author,
-                    postCreationResult.Value.Text,
-                    postCreationResult.Value.Medias)
-            ], cancellationToken);
+            await _domainEventsDispatcher.DispatchAsync(postCreationResult.Value.GetDomainEvents(), cancellationToken);
 
             _logger.LogInformation("Post {PostId} successfully created", postId);
             return Result.Success(postId);

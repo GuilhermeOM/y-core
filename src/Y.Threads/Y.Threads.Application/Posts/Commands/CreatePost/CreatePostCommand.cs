@@ -3,7 +3,7 @@ using Y.Core.SharedKernel.Abstractions.Messaging;
 using Y.Core.SharedKernel.Models;
 
 namespace Y.Threads.Application.Posts.Commands.CreatePost;
-public sealed class CreatePostCommand : ICommand<Guid>
+public sealed record CreatePostCommand : ICommand<Guid>
 {
     public string Text { get; set; } = string.Empty;
     public ICollection<CreateMediaPost> Medias { get; set; } = [];
