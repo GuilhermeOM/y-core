@@ -37,7 +37,7 @@ public class LikePostCommandHandlerTests
                     && x.PostId == command.PostId),
                 It.Is<MessageMetadata>(x =>
                     x.MessageKey == command.UserId.ToString()
-                    && x.ProducerName == KafkaConstants.Producers.PostLikeProducer)))
+                    && x.Topic == KafkaConstants.Topics.PostLikeTopic)))
             .Returns(Task.CompletedTask);
 
         // Act
@@ -53,6 +53,6 @@ public class LikePostCommandHandlerTests
                     && x.PostId == command.PostId),
                 It.Is<MessageMetadata>(x =>
                     x.MessageKey == command.UserId.ToString()
-                    && x.ProducerName == KafkaConstants.Producers.PostLikeProducer)), Times.Once);
+                    && x.Topic == KafkaConstants.Topics.PostLikeTopic)), Times.Once);
     }
 }

@@ -8,7 +8,7 @@ namespace Y.Threads.Domain.Aggregates.Post;
 public class Post : AggregateRoot
 {
     public const int MaxAllowedMedias = 4;
-    
+
     private ICollection<Media> _medias = [];
 
     public Guid AuthorId { get; private set; }
@@ -45,7 +45,7 @@ public class Post : AggregateRoot
 
         var post = new Post(author.Id, text, PostStatus.Published);
 
-        foreach (var media in  medias)
+        foreach (var media in medias)
         {
             var postMediaResult = post.AddMedia(media);
             if (postMediaResult.IsFailure)

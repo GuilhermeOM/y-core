@@ -53,7 +53,7 @@ internal sealed class PostDislikeRequestConsumerHandler : IMessageHandler<PostDi
                 return;
             }
 
-            var dislikePostResult = post.Dislike(message.UserId);
+            post.Dislike(message.UserId);
 
             await _domainEventsDispatcher.DispatchAsync(post.GetDomainEvents());
         }

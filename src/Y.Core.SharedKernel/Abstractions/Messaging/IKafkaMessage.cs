@@ -5,5 +5,5 @@ public interface IKafkaMessage;
 public sealed record MessageMetadata
 {
     public required string MessageKey { get; init; }
-    public required string Topic { get; init;  }
+    public required string Topic { get; init; }
 }

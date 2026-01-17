@@ -4,6 +4,7 @@ using Moq;
 using Polly;
 using Polly.Registry;
 using Y.Core.SharedKernel.Abstractions.Messaging;
+using Y.Threads.Domain.Constants;
 using Y.Threads.Infrastructure.Resilience;
 using Y.Threads.Infrastructure.Services;
 
@@ -34,21 +35,22 @@ public class ProducerServiceTests
         var messageMetadata = new MessageMetadata
         {
             MessageKey = Guid.NewGuid().ToString(),
-            ProducerName = Guid.NewGuid().ToString()
+            Topic = Guid.NewGuid().ToString()
         };
 
         var message = new DummyMessage();
         var messageProducerMock = new Mock<IMessageProducer>();
 
         _producerAccessorMock
-            .Setup(mock => mock[messageMetadata.ProducerName])
+            .Setup(mock => mock[KafkaConstants.Producers.Threads])
             .Returns(messageProducerMock.Object);
 
         // Act
         await _service.ProduceAsync(message, messageMetadata);
 
         // Assert
-        messageProducerMock.Verify(mock => mock.ProduceAsync(messageMetadata.MessageKey, message, default, default), Times.Once);
+        messageProducerMock.Verify(mock => mock
+            .ProduceAsync(messageMetadata.Topic, messageMetadata.MessageKey, message, default, default), Times.Once);
     }
 
     private class DummyMessage : IKafkaMessage

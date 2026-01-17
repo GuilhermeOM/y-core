@@ -44,11 +44,7 @@ public class PostLikeConsumerHandlerTests
     public async Task Handle_ShouldNotExecute_WhenLockNotAcquired()
     {
         // Arrange
-        var message = new PostLikeRequestEvent
-        {
-            PostId = Guid.NewGuid(),
-            UserId = Guid.NewGuid()
-        };
+        var message = new PostLikeRequestEvent(Guid.NewGuid(), Guid.NewGuid());
 
         _redisLock
             .Setup(mock => mock.CreateLockAsync(
@@ -76,11 +72,7 @@ public class PostLikeConsumerHandlerTests
     public async Task Handle_ShouldFail_WhenPostNotFound()
     {
         // Arrange
-        var message = new PostLikeRequestEvent
-        {
-            PostId = Guid.NewGuid(),
-            UserId = Guid.NewGuid()
-        };
+        var message = new PostLikeRequestEvent(Guid.NewGuid(), Guid.NewGuid());
 
         _redisLock
             .Setup(mock => mock.CreateLockAsync(
@@ -112,11 +104,7 @@ public class PostLikeConsumerHandlerTests
     public async Task Handle_ShouldFail_WhenPostStatusIsNotPublished()
     {
         // Arrange
-        var message = new PostLikeRequestEvent
-        {
-            PostId = Guid.NewGuid(),
-            UserId = Guid.NewGuid()
-        };
+        var message = new PostLikeRequestEvent(Guid.NewGuid(), Guid.NewGuid());
 
         _redisLock
             .Setup(mock => mock.CreateLockAsync(
@@ -152,11 +140,7 @@ public class PostLikeConsumerHandlerTests
     public async Task Handle_ShouldSucceed()
     {
         // Arrange
-        var message = new PostLikeRequestEvent
-        {
-            PostId = Guid.NewGuid(),
-            UserId = Guid.NewGuid()
-        };
+        var message = new PostLikeRequestEvent(Guid.NewGuid(), Guid.NewGuid());
 
         _redisLock
             .Setup(mock => mock.CreateLockAsync(

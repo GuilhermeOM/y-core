@@ -38,5 +38,7 @@ internal sealed class PostDislikedDomainEventHandler : IDomainEventHandler<PostD
         }
 
         await _threadRepository.DecrementLikeAsync(domainEvent.PostId, cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
     }
 }
