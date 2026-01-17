@@ -3,12 +3,13 @@ public static class KafkaConstants
 {
     public static class Producers
     {
-        public const string PostLikeProducer = "threads.posts-like.producer";
+        public const string Threads = "threads.default.producer";
     }
 
     public static class Topics
     {
-        public const string PostLikeTopic = "threads.posts-like.topic";
+        public const string PostLikeTopic = "threads.post-like.topic";
+        public const string PostDislikeTopic = "threads.post-dislike.topic";
     }
 
     public static class ConsumerGroups

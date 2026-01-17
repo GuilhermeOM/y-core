@@ -25,4 +25,15 @@ internal sealed class PostLikeRepository : IPostLikeRepository
             throw new PostExceptions.PostAlreadyLikedException("Post already liked");
         }
     }
+
+    public async Task<long> DeleteByPostIdUserIdAsync(
+        Guid postId,
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _context.PostLikes
+            .DeleteOneAsync(postLike => postLike.PostId == postId && postLike.UserId == userId, cancellationToken);
+
+        return result.DeletedCount;
+    }
 }

@@ -24,4 +24,12 @@ internal sealed class ThreadRepository : IThreadRepository
 
         await _context.Threads.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
     }
+
+    public async Task DecrementLikeAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var filter = Builders<Application.Threads.Models.Thread>.Filter.Eq(field => field.Id, id);
+        var update = Builders<Application.Threads.Models.Thread>.Update.Inc(thread => thread.LikeAmount, -1);
+
+        await _context.Threads.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
+    }
 }

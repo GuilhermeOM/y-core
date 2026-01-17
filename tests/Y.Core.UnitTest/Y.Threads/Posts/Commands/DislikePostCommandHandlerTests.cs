@@ -1,30 +1,30 @@
 ﻿using FluentAssertions;
 using Moq;
 using Y.Core.SharedKernel.Abstractions.Messaging;
-using Y.Threads.Application.Posts.Commands.LikePost;
+using Y.Threads.Application.Posts.Commands.DislikePost;
 using Y.Threads.Domain.Constants;
 using Y.Threads.Domain.Events;
 using Y.Threads.Domain.Services;
 
 namespace Y.Core.UnitTest.Y.Threads.Posts.Commands;
-public class LikePostCommandHandlerTests
+public class DislikePostCommandHandlerTests
 {
     private readonly Mock<IProducerService> _producerServiceMock;
 
-    private readonly LikePostCommandHandler _handler;
+    private readonly DislikePostCommandHandler _handler;
 
-    public LikePostCommandHandlerTests()
+    public DislikePostCommandHandlerTests()
     {
         _producerServiceMock = new Mock<IProducerService>();
 
-        _handler = new LikePostCommandHandler(_producerServiceMock.Object);
+        _handler = new DislikePostCommandHandler(_producerServiceMock.Object);
     }
 
     [Fact]
     public async Task HandleAsync_ShouldSucceed()
     {
         // Arrange
-        var command = new LikePostCommand
+        var command = new DislikePostCommand
         {
             PostId = Guid.NewGuid(),
             UserId = Guid.NewGuid()
@@ -32,12 +32,12 @@ public class LikePostCommandHandlerTests
 
         _producerServiceMock
             .Setup(mock => mock.ProduceAsync(
-                It.Is<PostLikeRequestEvent>(x =>
+                It.Is<PostDislikeRequestEvent>(x =>
                     x.UserId == command.UserId
                     && x.PostId == command.PostId),
                 It.Is<MessageMetadata>(x =>
                     x.MessageKey == command.UserId.ToString()
-                    && x.Topic == KafkaConstants.Topics.PostLikeTopic)))
+                    && x.Topic == KafkaConstants.Topics.PostDislikeTopic)))
             .Returns(Task.CompletedTask);
 
         // Act
@@ -48,11 +48,11 @@ public class LikePostCommandHandlerTests
 
         _producerServiceMock
             .Verify(mock => mock.ProduceAsync(
-                It.Is<PostLikeRequestEvent>(x =>
+                It.Is<PostDislikeRequestEvent>(x =>
                     x.UserId == command.UserId
                     && x.PostId == command.PostId),
                 It.Is<MessageMetadata>(x =>
                     x.MessageKey == command.UserId.ToString()
-                    && x.Topic == KafkaConstants.Topics.PostLikeTopic)), Times.Once);
+                    && x.Topic == KafkaConstants.Topics.PostDislikeTopic)), Times.Once);
     }
 }

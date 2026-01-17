@@ -2,4 +2,4 @@
 
 namespace Y.Threads.Domain.Events;
 
-public sealed record PostLikeRequestEvent(Guid PostId, Guid UserId) : IKafkaMessage;
+public sealed record PostDislikedEvent(Guid PostId, Guid UserId) : IDomainEvent;

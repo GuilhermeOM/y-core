@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using KafkaFlow;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -11,10 +11,9 @@ using Y.Threads.Domain.Repositories;
 using Y.Threads.Infrastructure.Consumers.PostLike;
 
 namespace Y.Core.UnitTest.Y.Threads.Consumers;
-
-public class PostLikeConsumerHandlerTests
+public class PostDislikeConsumerHandlerTests
 {
-    private readonly Mock<ILogger<PostLikeRequestConsumerHandler>> _loggerMock;
+    private readonly Mock<ILogger<PostDislikeRequestConsumerHandler>> _loggerMock;
     private readonly Mock<IPostRepository> _postRepositoryMock;
     private readonly Mock<IDistributedLockFactory> _redisLock;
     private readonly Mock<IDomainEventsDispatcher> _domainEventDispatcherMock;
@@ -22,18 +21,18 @@ public class PostLikeConsumerHandlerTests
     private readonly Mock<IMessageContext> _messageContext;
     private readonly Mock<IRedLock> _lockMock;
 
-    private readonly PostLikeRequestConsumerHandler _handler;
+    private readonly PostDislikeRequestConsumerHandler _handler;
 
-    public PostLikeConsumerHandlerTests()
+    public PostDislikeConsumerHandlerTests()
     {
-        _loggerMock = new Mock<ILogger<PostLikeRequestConsumerHandler>>();
+        _loggerMock = new Mock<ILogger<PostDislikeRequestConsumerHandler>>();
         _postRepositoryMock = new Mock<IPostRepository>();
         _redisLock = new Mock<IDistributedLockFactory>();
         _domainEventDispatcherMock = new Mock<IDomainEventsDispatcher>();
         _messageContext = new Mock<IMessageContext>();
         _lockMock = new Mock<IRedLock>();
 
-        _handler = new PostLikeRequestConsumerHandler(
+        _handler = new PostDislikeRequestConsumerHandler(
             _loggerMock.Object,
             _postRepositoryMock.Object,
             _redisLock.Object,
@@ -44,7 +43,7 @@ public class PostLikeConsumerHandlerTests
     public async Task Handle_ShouldNotExecute_WhenLockNotAcquired()
     {
         // Arrange
-        var message = new PostLikeRequestEvent(Guid.NewGuid(), Guid.NewGuid());
+        var message = new PostDislikeRequestEvent(Guid.NewGuid(), Guid.NewGuid());
 
         _redisLock
             .Setup(mock => mock.CreateLockAsync(
@@ -72,7 +71,7 @@ public class PostLikeConsumerHandlerTests
     public async Task Handle_ShouldFail_WhenPostNotFound()
     {
         // Arrange
-        var message = new PostLikeRequestEvent(Guid.NewGuid(), Guid.NewGuid());
+        var message = new PostDislikeRequestEvent(Guid.NewGuid(), Guid.NewGuid());
 
         _redisLock
             .Setup(mock => mock.CreateLockAsync(
@@ -101,46 +100,10 @@ public class PostLikeConsumerHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldFail_WhenPostStatusIsNotPublished()
-    {
-        // Arrange
-        var message = new PostLikeRequestEvent(Guid.NewGuid(), Guid.NewGuid());
-
-        _redisLock
-            .Setup(mock => mock.CreateLockAsync(
-                It.IsAny<string>(),
-                It.IsAny<TimeSpan>(),
-                It.IsAny<TimeSpan>(),
-                It.IsAny<TimeSpan>(),
-                default))
-            .ReturnsAsync(_lockMock.Object);
-
-        _lockMock.SetupGet(mock => mock.IsAcquired).Returns(true);
-
-        var post = CreateDummyPost();
-
-        _postRepositoryMock
-            .Setup(mock => mock.GetByIdAsync(message.PostId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(post);
-
-        post.Hide();
-
-        // Act
-        await _handler.Handle(_messageContext.Object, message);
-
-        // Assert
-        _postRepositoryMock
-            .Verify(mock => mock.GetByIdAsync(message.PostId, It.IsAny<CancellationToken>()), Times.Once);
-
-        _domainEventDispatcherMock
-            .Verify(mock => mock.DispatchAsync(It.IsAny<IEnumerable<IDomainEvent>>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [Fact]
     public async Task Handle_ShouldSucceed()
     {
         // Arrange
-        var message = new PostLikeRequestEvent(Guid.NewGuid(), Guid.NewGuid());
+        var message = new PostDislikeRequestEvent(Guid.NewGuid(), Guid.NewGuid());
 
         _redisLock
             .Setup(mock => mock.CreateLockAsync(
@@ -167,7 +130,7 @@ public class PostLikeConsumerHandlerTests
         await _handler.Handle(_messageContext.Object, message);
 
         // Assert
-        post.GetDomainEvents().Should().Contain(x => x.GetType().Name == typeof(PostLikedEvent).Name);
+        post.GetDomainEvents().Should().Contain(x => x.GetType().Name == typeof(PostDislikedEvent).Name);
 
         _postRepositoryMock
             .Verify(mock => mock.GetByIdAsync(message.PostId, It.IsAny<CancellationToken>()), Times.Once);

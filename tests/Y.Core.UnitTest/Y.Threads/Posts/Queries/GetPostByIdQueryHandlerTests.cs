@@ -45,7 +45,7 @@ public class GetPostByIdQueryHandlerTests
         var query = new GetPostByIdQuery(Guid.NewGuid());
 
         var author = new Author { Id = Guid.NewGuid() };
-        var post = Post.Create(author,  "Dummy text").Value;
+        var post = Post.Create(author, "Dummy text").Value;
 
         _postRepositoryMock
             .Setup(repo => repo.GetByIdAsync(query.Id, It.IsAny<CancellationToken>()))
