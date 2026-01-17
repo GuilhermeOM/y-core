@@ -16,16 +16,12 @@ internal sealed class LikePostCommandHandler : ICommandHandler<LikePostCommand>
 
     public async Task<Result> HandleAsync(LikePostCommand command, CancellationToken cancellationToken = default)
     {
-        var @event = new PostLikeRequestEvent
-        {
-            UserId = command.UserId,
-            PostId = command.PostId,
-        };
+        var @event = new PostLikeRequestEvent(command.PostId, command.UserId);
 
         await _producerService.ProduceAsync(@event, new()
         {
             MessageKey = @event.UserId.ToString(),
-            ProducerName = KafkaConstants.Producers.PostLikeProducer
+            Topic = KafkaConstants.Topics.PostLikeTopic,
         });
 
         return Result.Success();

@@ -29,14 +29,15 @@ internal static class KafkaTopologyConfiguration
     public static IClusterConfigurationBuilder ConfigureTopics(this IClusterConfigurationBuilder cluster)
     {
         return cluster
-            .CreateTopicIfNotExists(KafkaConstants.Topics.PostLikeTopic, 2, 1);
+            .CreateTopicIfNotExists(KafkaConstants.Topics.PostLikeTopic, 2, 1)
+            .CreateTopicIfNotExists(KafkaConstants.Topics.PostDislikeTopic, 2, 1);
+
     }
 
     public static IClusterConfigurationBuilder ConfigureProducers(this IClusterConfigurationBuilder cluster)
     {
         return cluster
-            .AddProducer(KafkaConstants.Producers.PostLikeProducer, producer => producer
-                .DefaultTopic(KafkaConstants.Topics.PostLikeTopic)
+            .AddProducer(KafkaConstants.Producers.Threads, producer => producer
                 .AddMiddlewares(middlewares => middlewares.AddSerializer<JsonCoreSerializer>())
             );
     }
@@ -52,6 +53,16 @@ internal static class KafkaTopologyConfiguration
                 .AddMiddlewares(middlewares => middlewares.AddConsumerHandlers(
                 [
                     typeof(PostLikeRequestConsumerHandler)
+                ]))
+            )
+            .AddConsumer(consumer => consumer
+                .Topic(KafkaConstants.Topics.PostDislikeTopic)
+                .WithGroupId(KafkaConstants.ConsumerGroups.ThreadsBaseConsumerGroup)
+                .WithBufferSize(100)
+                .WithWorkersCount(10)
+                .AddMiddlewares(middlewares => middlewares.AddConsumerHandlers(
+                [
+                    typeof(PostDislikeRequestConsumerHandler)
                 ]))
             );
     }

@@ -8,15 +8,15 @@ using Y.Threads.Domain.Events;
 using Y.Threads.Domain.Repositories;
 
 namespace Y.Threads.Infrastructure.Consumers.PostLike;
-internal sealed class PostLikeRequestConsumerHandler : IMessageHandler<PostLikeRequestEvent>
+internal sealed class PostDislikeRequestConsumerHandler : IMessageHandler<PostDislikeRequestEvent>
 {
-    private readonly ILogger<PostLikeRequestConsumerHandler> _logger;
+    private readonly ILogger<PostDislikeRequestConsumerHandler> _logger;
     private readonly IPostRepository _postRepository;
     private readonly IDistributedLockFactory _redisLock;
     private readonly IDomainEventsDispatcher _domainEventsDispatcher;
 
-    public PostLikeRequestConsumerHandler(
-        ILogger<PostLikeRequestConsumerHandler> logger,
+    public PostDislikeRequestConsumerHandler(
+        ILogger<PostDislikeRequestConsumerHandler> logger,
         IPostRepository postRepository,
         IDistributedLockFactory redisLock,
         IDomainEventsDispatcher domainEventsDispatcher)
@@ -27,7 +27,7 @@ internal sealed class PostLikeRequestConsumerHandler : IMessageHandler<PostLikeR
         _domainEventsDispatcher = domainEventsDispatcher;
     }
 
-    public async Task Handle(IMessageContext context, PostLikeRequestEvent message)
+    public async Task Handle(IMessageContext context, PostDislikeRequestEvent message)
     {
         using var _ = LogContext.PushProperty("PostId", message.PostId);
         using var __ = LogContext.PushProperty("UserId", message.UserId);
@@ -49,16 +49,11 @@ internal sealed class PostLikeRequestConsumerHandler : IMessageHandler<PostLikeR
             var post = await _postRepository.GetByIdAsync(message.PostId);
             if (post is null)
             {
-                _logger.LogError("Post not found. Like action can not be completed");
+                _logger.LogError("Post not found. Dislike action can not be completed");
                 return;
             }
 
-            var likePostResult = post.Like(message.UserId);
-            if (likePostResult.IsFailure)
-            {
-                _logger.LogError("Post can not be liked. Error {@Error}", likePostResult.Error);
-                return;
-            }
+            var dislikePostResult = post.Dislike(message.UserId);
 
             await _domainEventsDispatcher.DispatchAsync(post.GetDomainEvents());
         }

@@ -87,6 +87,12 @@ public class Post : AggregateRoot
         return Result.Success();
     }
 
+    public Result Dislike(Guid userId)
+    {
+        RaiseDomainEvent(new PostDislikedEvent(Id, userId));
+        return Result.Success();
+    }
+
     public Result Hide()
     {
         if (Status != PostStatus.Published)
