@@ -4,9 +4,11 @@ using KafkaFlow.Serializer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Y.Threads.Domain.Constants;
-using Y.Threads.Infrastructure.Consumers.PostLike;
+using Y.Threads.Infrastructure;
+using Y.Threads.Infrastructure.Messaging.Consumers.PostLike;
+using Y.Threads.Infrastructure.Messaging.Middlwares;
 
-namespace Y.Threads.Infrastructure.Consumers;
+namespace Y.Threads.Infrastructure.Messaging;
 internal static class KafkaTopologyConfiguration
 {
     public static IServiceCollection ConfigureKafkaTopology(this IServiceCollection services, IConfiguration configuration)

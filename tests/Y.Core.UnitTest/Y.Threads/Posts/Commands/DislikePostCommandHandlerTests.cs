@@ -1,6 +1,6 @@
 ﻿using FluentAssertions;
 using Moq;
-using Y.Core.SharedKernel.Abstractions.Messaging;
+using Y.Contract.SharedKernel.Abstractions.Messaging;
 using Y.Threads.Application.Posts.Commands.DislikePost;
 using Y.Threads.Domain.Constants;
 using Y.Threads.Domain.Events;

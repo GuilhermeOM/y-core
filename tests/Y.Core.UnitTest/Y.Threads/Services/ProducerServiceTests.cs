@@ -3,7 +3,7 @@ using KafkaFlow.Producers;
 using Moq;
 using Polly;
 using Polly.Registry;
-using Y.Core.SharedKernel.Abstractions.Messaging;
+using Y.Contract.SharedKernel.Abstractions.Messaging;
 using Y.Threads.Domain.Constants;
 using Y.Threads.Infrastructure.Resilience;
 using Y.Threads.Infrastructure.Services;

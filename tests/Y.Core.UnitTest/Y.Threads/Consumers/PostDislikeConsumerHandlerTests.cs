@@ -8,7 +8,7 @@ using Y.Core.SharedKernel.Models;
 using Y.Threads.Domain.Aggregates.Post;
 using Y.Threads.Domain.Events;
 using Y.Threads.Domain.Repositories;
-using Y.Threads.Infrastructure.Consumers.PostLike;
+using Y.Threads.Infrastructure.Messaging.Consumers.PostLike;
 
 namespace Y.Core.UnitTest.Y.Threads.Consumers;
 public class PostDislikeConsumerHandlerTests

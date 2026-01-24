@@ -1,4 +1,4 @@
-﻿using Y.Core.SharedKernel.Abstractions.Messaging;
+﻿using Y.Contract.SharedKernel.Abstractions.Messaging;
 
 namespace Y.Threads.Domain.Events;
 
