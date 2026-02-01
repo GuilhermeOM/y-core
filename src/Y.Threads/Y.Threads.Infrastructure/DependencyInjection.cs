@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Azure;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MimeDetective;
 using MongoDB.Bson;
@@ -33,7 +34,7 @@ public static class DependencyInjection
             .AddRepositories()
             .AddBackgroundServices()
             .AddDomainEventsDispatcher()
-            .AddSupabase(configuration)
+            .AddAzureClients(configuration)
             .AddFileInspector()
             .AddServices()
             .AddPipelinePolicies()
@@ -45,6 +46,7 @@ public static class DependencyInjection
     {
         services.AddHostedService<MongoConfiguratorBackgroundService>();
         services.AddHostedService<KafkaBusStartBackgroundService>();
+        services.AddHostedService<BlobStorageConfiguratorService>();
 
         return services;
     }
@@ -84,17 +86,13 @@ public static class DependencyInjection
         return services;
     }
 
-    private static IServiceCollection AddSupabase(this IServiceCollection services, IConfiguration configuration)
+    private static IServiceCollection AddAzureClients(this IServiceCollection services, IConfiguration configuration)
     {
-        var supabaseUrl = configuration["Supabase:Url"];
-        var supabaseKey = configuration["Supabase:Key"];
+        var blobServiceUriOrConnectionString = configuration.GetConnectionString("BlobStorage");
 
-        services.AddSingleton(provider =>
+        services.AddAzureClients(builder =>
         {
-            return new Supabase.Client(supabaseUrl!, supabaseKey, new Supabase.SupabaseOptions
-            {
-                AutoConnectRealtime = true
-            });
+            builder.AddBlobServiceClient(blobServiceUriOrConnectionString!);
         });
 
         return services;
@@ -115,7 +113,9 @@ public static class DependencyInjection
 
     private static IServiceCollection AddServices(this IServiceCollection services)
     {
-        services.AddScoped<IStorageService, StorageService>();
+        services.AddSingleton<IStorageService, StorageService>();
+        services.AddSingleton<IFileInspectorService, FileInspectorService>();
+
         services.AddScoped<IProducerService, ProducerService>();
 
         return services;

@@ -1,7 +1,9 @@
-﻿using MimeDetective;
-using MongoDB.Driver;
+﻿using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
+using Microsoft.Extensions.Options;
 using Polly.Registry;
 using Y.Threads.Domain.Aggregates.Post;
+using Y.Threads.Domain.Options;
 using Y.Threads.Domain.Services;
 using Y.Threads.Domain.ValueObjects;
 using Y.Threads.Infrastructure.Resilience;
@@ -9,35 +11,35 @@ using Y.Threads.Infrastructure.Resilience;
 namespace Y.Threads.Infrastructure.Services;
 internal sealed class StorageService : IStorageService
 {
-    private const string ImageBucket = "media/images";
-    private const string VideoBucket = "media/videos";
+    public const string PublicThreadsContainerName = "public-threads";
 
-    private readonly Supabase.Client _client;
-    private readonly IContentInspector _contentInspector;
+    private const string ImagePathName = "images";
+    private const string VideoPathname = "videos";
+
+    private readonly BlobServiceClient _blobServiceClient;
     private readonly ResiliencePipelineProvider<string> _resiliencePipelineProvider;
+    private readonly IFileInspectorService _fileInspectorService;
+    private readonly IOptions<BlobStorageOptions> _blobStorageOptions;
 
     public StorageService(
-        Supabase.Client client,
-        IContentInspector contentInspector,
-        ResiliencePipelineProvider<string> resiliencePipelineProvider)
+        BlobServiceClient blobServiceClient,
+        ResiliencePipelineProvider<string> resiliencePipelineProvider,
+        IFileInspectorService fileInspectorService,
+        IOptions<BlobStorageOptions> blobStorageOptions)
     {
-        _client = client;
-        _contentInspector = contentInspector;
+        _blobServiceClient = blobServiceClient;
         _resiliencePipelineProvider = resiliencePipelineProvider;
+        _fileInspectorService = fileInspectorService;
+        _blobStorageOptions = blobStorageOptions;
     }
 
-    public async Task<MediaUpload?> UploadMediaAsync(Guid userId, Stream stream, CancellationToken cancellationToken = default)
+    public async Task<MediaUpload?> UploadMediaAsync(
+        Guid userId,
+        Stream stream,
+        CancellationToken cancellationToken = default)
     {
-        cancellationToken.ThrowIfCancellationRequested();
-
-        stream.Seek(0, SeekOrigin.Begin);
-        using var memoryStream = new MemoryStream();
-        await stream.CopyToAsync(memoryStream, cancellationToken);
-
-        var memoryStreamArray = memoryStream.ToArray();
-
-        var (Mime, Extension) = InspectFile(memoryStreamArray);
-        if (string.IsNullOrEmpty(Mime) || string.IsNullOrEmpty(Extension))
+        var inspectionResult = _fileInspectorService.InspectFileStream(stream);
+        if (inspectionResult.IsFailure)
         {
             return null;
         }
@@ -48,71 +50,65 @@ internal sealed class StorageService : IStorageService
             {
                 return await UploadAsync(
                     userId,
-                    memoryStreamArray,
-                    Mime,
-                    Extension,
+                    stream,
+                    inspectionResult.Value.Mime,
+                    inspectionResult.Value.Extension,
                     cancellationToken);
             }, cancellationToken);
     }
 
-    private (string? Mime, string? Extension) InspectFile(byte[] data)
-    {
-        var inspect = _contentInspector.Inspect(data);
-
-        var mimeResults = inspect.ByMimeType();
-        var extensionResults = inspect.ByFileExtension();
-
-        var extension = extensionResults.FirstOrDefault()?.Extension;
-        var mime = mimeResults.FirstOrDefault()?.MimeType;
-
-        return new(mime, extension);
-    }
-
     private async Task<MediaUpload?> UploadAsync(
         Guid userId,
-        byte[] data,
+        Stream data,
         string mime,
         string extension,
         CancellationToken cancellationToken)
     {
-        cancellationToken.ThrowIfCancellationRequested();
+        data.Seek(0, SeekOrigin.Begin);
 
         var mediaName = CreateMediaName(extension);
-        var mediaPath = CreateMediaPath(userId, mediaName);
-        var mediaType = Media.GetMediaTypeByMime(mime);
+        var mediaPath = CreateMediaPath(mime, userId, mediaName);
 
-        var bucket = mediaType switch
+        var blobContainerClient = _blobServiceClient.GetBlobContainerClient(PublicThreadsContainerName);
+        var blobClient = blobContainerClient.GetBlobClient(mediaPath);
+
+        var upload = await blobClient.UploadAsync(data, new BlobHttpHeaders
         {
-            MediaType.Image => ImageBucket,
-            MediaType.Video => VideoBucket,
-            _ => null
-        };
+            ContentType = mime,
+            CacheControl = "public, max-age=31536000"
+        }, cancellationToken: cancellationToken);
 
-        if (bucket is null) return null;
+        if (upload.GetRawResponse().Status >= 400)
+        {
+            return null;
+        }
 
-        await _client.Storage
-            .From(bucket)
-            .Upload(data, mediaPath, new Supabase.Storage.FileOptions { ContentType = mime });
-
-        var url = _client.Storage.From(ImageBucket).GetPublicUrl(mediaPath);
-
-        return new(mediaName, url, mime);
+        return new(mediaName, CreateMediaPublicUrl(mediaPath), mime);
     }
 
     public async Task DeleteMediaAsync(Guid userId, MediaUpload mediaUpload)
     {
-        var bucket = Media.GetMediaTypeByMime(mediaUpload.Mime) switch
-        {
-            MediaType.Image => ImageBucket,
-            MediaType.Video => VideoBucket,
-            _ => throw new ArgumentOutOfRangeException(nameof(mediaUpload), "Unsupported media type")
-        };
+        var mediaPath = CreateMediaPath(mediaUpload.Mime, userId, mediaUpload.Name);
 
-        await _client.Storage
-            .From(bucket)
-            .Remove(CreateMediaPath(userId, mediaUpload.Name));
+        var blobContainerClient = _blobServiceClient.GetBlobContainerClient(PublicThreadsContainerName);
+        var blobClient = blobContainerClient.GetBlobClient(mediaPath);
+
+        await blobClient.DeleteIfExistsAsync();
     }
 
     private static string CreateMediaName(string extension) => $"{Guid.NewGuid():N}.{extension}";
-    private static string CreateMediaPath(Guid userId, string mediaName) => $"{userId:N}/{mediaName}";
+
+    private static string CreateMediaPath(string mime, Guid userId, string mediaName)
+    {
+        var rootPath = Media.GetMediaTypeByMime(mime) switch
+        {
+            MediaType.Image => ImagePathName,
+            MediaType.Video => VideoPathname,
+            _ => throw new ArgumentOutOfRangeException(nameof(mime), "Unsupported media type")
+        };
+
+        return $"{rootPath}/{userId:N}/{mediaName}";
+    }
+
+    private string CreateMediaPublicUrl(string mediaPath) => $"{_blobStorageOptions.Value.BaseUrl}/{PublicThreadsContainerName}/{mediaPath}";
 }

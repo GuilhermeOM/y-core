@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Text;
-using KafkaFlow;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
@@ -44,6 +43,7 @@ try
             options.RequireHttpsMetadata = false;
             options.TokenValidationParameters = new TokenValidationParameters
             {
+                ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"]!)),
                 ValidIssuer = builder.Configuration["Jwt:Issuer"],
                 ValidAudience = builder.Configuration["Jwt:Audience"],
@@ -85,6 +85,7 @@ finally
 
 void ThreadsDependencyInjection()
 {
+    Y.Threads.Domain.DependencyInjection.AddDomain(builder.Services, builder.Configuration);
     Y.Threads.Infrastructure.DependencyInjection.AddInfrastructure(builder.Services, builder.Configuration);
     Y.Threads.Application.DependencyInjection.AddApplication(builder.Services, builder.Configuration);
 }
