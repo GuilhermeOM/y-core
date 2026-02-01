@@ -18,14 +18,12 @@
     <PackageReference Include="NRedisStack" Version="1.1.1" />
     <PackageReference Include="Polly.Extensions" Version="8.6.5" />
     <PackageReference Include="RedLock.net" Version="2.3.2" />
-    <PackageReference Include="Supabase" Version="1.1.1" />
     <PackageReference Include="KafkaFlow" Version="4.1.0" />
     <PackageReference Include="KafkaFlow.Microsoft.DependencyInjection" Version="4.1.0" />
     <PackageReference Include="KafkaFlow.Serializer.JsonCore" Version="4.1.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Y.Articles\Y.Articles.Domain\Y.Articles.Domain.csproj" />
     <ProjectReference Include="..\Y.Threads.Application\Y.Threads.Application.csproj" />
     <ProjectReference Include="..\Y.Threads.Domain\Y.Threads.Domain.csproj" />
   </ItemGroup>
