@@ -39,7 +39,7 @@ internal sealed class CreatePostMediaUploadManager
         {
             using var stream = file.Media.OpenReadStream();
 
-            var uploadedMedia = await _storageService.UploadMediaAsync(userId, stream, cancellationToken);
+            var uploadedMedia = await _storageService.UploadAsync(userId, stream, cancellationToken);
             if (uploadedMedia is null)
             {
                 return false;
@@ -58,7 +58,7 @@ internal sealed class CreatePostMediaUploadManager
     public async Task RollbackAsync(Guid userId)
     {
         var deleteMediaTasks = _uploadedMedias
-            .Select(media => _storageService.DeleteMediaAsync(userId, media));
+            .Select(media => _storageService.DeleteAsync(userId, media));
 
         await Task.WhenAll(deleteMediaTasks);
 

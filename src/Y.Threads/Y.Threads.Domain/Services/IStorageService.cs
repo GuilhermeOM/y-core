@@ -3,6 +3,6 @@
 namespace Y.Threads.Domain.Services;
 public interface IStorageService
 {
-    Task<MediaUpload?> UploadMediaAsync(Guid userId, Stream stream, CancellationToken cancellationToken = default);
-    Task DeleteMediaAsync(Guid userId, MediaUpload media);
+    Task<MediaUpload?> UploadAsync(Guid userId, Stream stream, CancellationToken cancellationToken = default);
+    Task DeleteAsync(Guid userId, MediaUpload media);
 }

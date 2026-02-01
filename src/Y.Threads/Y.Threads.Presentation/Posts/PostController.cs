@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Y.Contract.SharedKernel.Enums;
 using Y.Core.SharedKernel.Abstractions.Messaging;
 using Y.Threads.Application.Posts.Commands.CreatePost;
 using Y.Threads.Application.Posts.Commands.DislikePost;
@@ -10,6 +11,7 @@ using Y.Threads.Domain.Aggregates.Post;
 namespace Y.Threads.Presentation.Posts;
 
 [Route("api/post")]
+[Authorize(Roles = nameof(Role.User))]
 public sealed class PostController : ApiController
 {
     private readonly IQueryHandler<GetPostByIdQuery, Post> _getPostByIdQueryHandler;
@@ -37,7 +39,6 @@ public sealed class PostController : ApiController
     }
 
     [HttpPost]
-    [Authorize(Roles = "User")]
     public async Task<IActionResult> CreateAsync(
         [FromForm] PostRequests.CreatePostRequest request,
         CancellationToken cancellationToken = default)
@@ -58,7 +59,6 @@ public sealed class PostController : ApiController
     }
 
     [HttpPost("like/{postId:guid}")]
-    [Authorize(Roles = "User")]
     public async Task<IActionResult> LikeAsync(
         [FromRoute] Guid postId,
         CancellationToken cancellationToken = default)
@@ -78,7 +78,6 @@ public sealed class PostController : ApiController
 
 
     [HttpPost("dislike/{postId:guid}")]
-    [Authorize(Roles = "User")]
     public async Task<IActionResult> DislikeAsync(
         [FromRoute] Guid postId,
         CancellationToken cancellationToken = default)
