@@ -74,7 +74,7 @@ public class CreatePostCommandHandlerTests
         };
 
         _storageServiceMock
-            .Setup(mock => mock.UploadMediaAsync(
+            .Setup(mock => mock.UploadAsync(
                 command.Author.Id,
                 It.IsAny<Stream>(),
                 It.IsAny<CancellationToken>()))
@@ -88,14 +88,14 @@ public class CreatePostCommandHandlerTests
         result.Error.Should().BeEquivalentTo(PostErrors.MediaUploadFailed);
 
         _storageServiceMock.Verify(
-            mock => mock.UploadMediaAsync(
+            mock => mock.UploadAsync(
                 command.Author.Id,
                 It.IsAny<Stream>(),
                 It.IsAny<CancellationToken>()),
             Times.Exactly(command.Medias.Count));
 
         _storageServiceMock.Verify(
-            mock => mock.DeleteMediaAsync(
+            mock => mock.DeleteAsync(
                 It.IsAny<Guid>(),
                 It.IsAny<MediaUpload>()),
             Times.Never);
@@ -124,14 +124,14 @@ public class CreatePostCommandHandlerTests
         using var media1Stream = medias[1].Media.OpenReadStream();
 
         _storageServiceMock
-            .Setup(mock => mock.UploadMediaAsync(
+            .Setup(mock => mock.UploadAsync(
                 command.Author.Id,
                 media0Stream,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((MediaUpload?)null);
 
         _storageServiceMock
-            .Setup(mock => mock.UploadMediaAsync(
+            .Setup(mock => mock.UploadAsync(
                 command.Author.Id,
                 media1Stream,
                 It.IsAny<CancellationToken>()))
@@ -145,14 +145,14 @@ public class CreatePostCommandHandlerTests
         result.Error.Should().BeEquivalentTo(PostErrors.MediaUploadFailed);
 
         _storageServiceMock.Verify(
-            mock => mock.UploadMediaAsync(
+            mock => mock.UploadAsync(
                 command.Author.Id,
                 It.IsAny<Stream>(),
                 It.IsAny<CancellationToken>()),
             Times.Exactly(command.Medias.Count));
 
         _storageServiceMock.Verify(
-            mock => mock.DeleteMediaAsync(
+            mock => mock.DeleteAsync(
                 command.Author.Id,
                 It.IsAny<MediaUpload>()),
             Times.Once);
@@ -174,7 +174,7 @@ public class CreatePostCommandHandlerTests
         };
 
         _storageServiceMock
-            .Setup(mock => mock.UploadMediaAsync(
+            .Setup(mock => mock.UploadAsync(
                 command.Author.Id,
                 It.IsAny<Stream>(),
                 It.IsAny<CancellationToken>()))
@@ -188,14 +188,14 @@ public class CreatePostCommandHandlerTests
         result.Error.Should().BeEquivalentTo(PostErrors.EmptyAuthor);
 
         _storageServiceMock.Verify(
-            mock => mock.UploadMediaAsync(
+            mock => mock.UploadAsync(
                 command.Author.Id,
                 It.IsAny<Stream>(),
                 It.IsAny<CancellationToken>()),
             Times.Exactly(command.Medias.Count));
 
         _storageServiceMock.Verify(
-            mock => mock.DeleteMediaAsync(
+            mock => mock.DeleteAsync(
                 command.Author.Id,
                 It.IsAny<MediaUpload>()),
             Times.Exactly(command.Medias.Count));
@@ -223,14 +223,14 @@ public class CreatePostCommandHandlerTests
         result.Error.Should().BeEquivalentTo(PostErrors.EmptyPost);
 
         _storageServiceMock.Verify(
-            mock => mock.UploadMediaAsync(
+            mock => mock.UploadAsync(
                 It.IsAny<Guid>(),
                 It.IsAny<Stream>(),
                 It.IsAny<CancellationToken>()),
             Times.Never);
 
         _storageServiceMock.Verify(
-            mock => mock.DeleteMediaAsync(
+            mock => mock.DeleteAsync(
                 It.IsAny<Guid>(),
                 It.IsAny<MediaUpload>()),
             Times.Never);
@@ -259,7 +259,7 @@ public class CreatePostCommandHandlerTests
         };
 
         _storageServiceMock
-            .Setup(mock => mock.UploadMediaAsync(
+            .Setup(mock => mock.UploadAsync(
                 command.Author.Id,
                 It.IsAny<Stream>(),
                 It.IsAny<CancellationToken>()))
@@ -273,14 +273,14 @@ public class CreatePostCommandHandlerTests
         result.Error.Should().BeEquivalentTo(PostErrors.MaxMediaExceeded);
 
         _storageServiceMock.Verify(
-            mock => mock.UploadMediaAsync(
+            mock => mock.UploadAsync(
                 command.Author.Id,
                 It.IsAny<Stream>(),
                 It.IsAny<CancellationToken>()),
             Times.Exactly(command.Medias.Count));
 
         _storageServiceMock.Verify(
-            mock => mock.DeleteMediaAsync(
+            mock => mock.DeleteAsync(
                 command.Author.Id,
                 It.IsAny<MediaUpload>()),
             Times.Exactly(command.Medias.Count));
@@ -305,7 +305,7 @@ public class CreatePostCommandHandlerTests
         };
 
         _storageServiceMock
-            .Setup(mock => mock.UploadMediaAsync(
+            .Setup(mock => mock.UploadAsync(
                 command.Author.Id,
                 It.IsAny<Stream>(),
                 It.IsAny<CancellationToken>()))
@@ -319,14 +319,14 @@ public class CreatePostCommandHandlerTests
         result.Error.Should().BeEquivalentTo(PostErrors.UnsupportedMediaType);
 
         _storageServiceMock.Verify(
-            mock => mock.UploadMediaAsync(
+            mock => mock.UploadAsync(
                 command.Author.Id,
                 It.IsAny<Stream>(),
                 It.IsAny<CancellationToken>()),
             Times.Exactly(command.Medias.Count));
 
         _storageServiceMock.Verify(
-            mock => mock.DeleteMediaAsync(
+            mock => mock.DeleteAsync(
                 command.Author.Id,
                 It.IsAny<MediaUpload>()),
             Times.Exactly(command.Medias.Count));
@@ -361,14 +361,14 @@ public class CreatePostCommandHandlerTests
         };
 
         _storageServiceMock
-            .Setup(mock => mock.UploadMediaAsync(
+            .Setup(mock => mock.UploadAsync(
                 command.Author.Id,
                 media0Stream,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(mediaUploads[0]);
 
         _storageServiceMock
-            .Setup(mock => mock.UploadMediaAsync(
+            .Setup(mock => mock.UploadAsync(
                 command.Author.Id,
                 media1Stream,
                 It.IsAny<CancellationToken>()))
@@ -393,14 +393,14 @@ public class CreatePostCommandHandlerTests
         result.Error.Should().BeEquivalentTo(PostErrors.PostCreationFailed);
 
         _storageServiceMock.Verify(
-            mock => mock.UploadMediaAsync(
+            mock => mock.UploadAsync(
                 command.Author.Id,
                 It.IsAny<Stream>(),
                 It.IsAny<CancellationToken>()),
             Times.Exactly(command.Medias.Count));
 
         _storageServiceMock.Verify(
-            mock => mock.DeleteMediaAsync(
+            mock => mock.DeleteAsync(
                 command.Author.Id,
                 It.IsAny<MediaUpload>()),
             Times.Exactly(command.Medias.Count));
@@ -435,14 +435,14 @@ public class CreatePostCommandHandlerTests
         };
 
         _storageServiceMock
-            .Setup(mock => mock.UploadMediaAsync(
+            .Setup(mock => mock.UploadAsync(
                 command.Author.Id,
                 media0Stream,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(mediaUploads[0]);
 
         _storageServiceMock
-            .Setup(mock => mock.UploadMediaAsync(
+            .Setup(mock => mock.UploadAsync(
                 command.Author.Id,
                 media1Stream,
                 It.IsAny<CancellationToken>()))
@@ -474,14 +474,14 @@ public class CreatePostCommandHandlerTests
         result.Value.Should().Be(postId);
 
         _storageServiceMock.Verify(
-            mock => mock.UploadMediaAsync(
+            mock => mock.UploadAsync(
                 command.Author.Id,
                 It.IsAny<Stream>(),
                 It.IsAny<CancellationToken>()),
             Times.Exactly(command.Medias.Count));
 
         _storageServiceMock.Verify(
-            mock => mock.DeleteMediaAsync(
+            mock => mock.DeleteAsync(
                 It.IsAny<Guid>(),
                 It.IsAny<MediaUpload>()),
             Times.Never);
@@ -535,14 +535,14 @@ public class CreatePostCommandHandlerTests
         result.Value.Should().Be(postId);
 
         _storageServiceMock.Verify(
-            mock => mock.UploadMediaAsync(
+            mock => mock.UploadAsync(
                 It.IsAny<Guid>(),
                 It.IsAny<Stream>(),
                 It.IsAny<CancellationToken>()),
             Times.Never);
 
         _storageServiceMock.Verify(
-            mock => mock.DeleteMediaAsync(
+            mock => mock.DeleteAsync(
                 It.IsAny<Guid>(),
                 It.IsAny<MediaUpload>()),
             Times.Never);
@@ -585,14 +585,14 @@ public class CreatePostCommandHandlerTests
         };
 
         _storageServiceMock
-            .Setup(mock => mock.UploadMediaAsync(
+            .Setup(mock => mock.UploadAsync(
                 command.Author.Id,
                 media0Stream,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(mediaUploads[0]);
 
         _storageServiceMock
-            .Setup(mock => mock.UploadMediaAsync(
+            .Setup(mock => mock.UploadAsync(
                 command.Author.Id,
                 media1Stream,
                 It.IsAny<CancellationToken>()))
@@ -624,14 +624,14 @@ public class CreatePostCommandHandlerTests
         result.Value.Should().Be(postId);
 
         _storageServiceMock.Verify(
-            mock => mock.UploadMediaAsync(
+            mock => mock.UploadAsync(
                 command.Author.Id,
                 It.IsAny<Stream>(),
                 It.IsAny<CancellationToken>()),
             Times.Exactly(command.Medias.Count));
 
         _storageServiceMock.Verify(
-            mock => mock.DeleteMediaAsync(
+            mock => mock.DeleteAsync(
                 It.IsAny<Guid>(),
                 It.IsAny<MediaUpload>()),
             Times.Never);

@@ -13,8 +13,8 @@ internal sealed class StorageService : IStorageService
 {
     public const string PublicThreadsContainerName = "public-threads";
 
-    private const string ImagePathName = "images";
-    private const string VideoPathname = "videos";
+    public const string ImagePathName = "images";
+    public const string VideoPathname = "videos";
 
     private readonly BlobServiceClient _blobServiceClient;
     private readonly ResiliencePipelineProvider<string> _resiliencePipelineProvider;
@@ -33,7 +33,7 @@ internal sealed class StorageService : IStorageService
         _blobStorageOptions = blobStorageOptions;
     }
 
-    public async Task<MediaUpload?> UploadMediaAsync(
+    public async Task<MediaUpload?> UploadAsync(
         Guid userId,
         Stream stream,
         CancellationToken cancellationToken = default)
@@ -48,7 +48,7 @@ internal sealed class StorageService : IStorageService
             .GetPipeline(Resiliences.FastDefaultRetryPipelinePolicy)
             .ExecuteAsync(async _ =>
             {
-                return await UploadAsync(
+                return await UploadMediaAsync(
                     userId,
                     stream,
                     inspectionResult.Value.Mime,
@@ -57,7 +57,7 @@ internal sealed class StorageService : IStorageService
             }, cancellationToken);
     }
 
-    private async Task<MediaUpload?> UploadAsync(
+    private async Task<MediaUpload?> UploadMediaAsync(
         Guid userId,
         Stream data,
         string mime,
@@ -86,7 +86,7 @@ internal sealed class StorageService : IStorageService
         return new(mediaName, CreateMediaPublicUrl(mediaPath), mime);
     }
 
-    public async Task DeleteMediaAsync(Guid userId, MediaUpload mediaUpload)
+    public async Task DeleteAsync(Guid userId, MediaUpload mediaUpload)
     {
         var mediaPath = CreateMediaPath(mediaUpload.Mime, userId, mediaUpload.Name);
 
