@@ -109,6 +109,8 @@ internal sealed class CreatePostMediaService : ICreatePostMediaService
 
     public async Task RollbackAsync(IReadOnlyCollection<FileUploadResult> medias)
     {
+        medias ??= [];
+
         var deleteMediaTasks = medias.Select(media => _storageService.DeleteAsync(media.Path));
         await Task.WhenAll(deleteMediaTasks);
     }
