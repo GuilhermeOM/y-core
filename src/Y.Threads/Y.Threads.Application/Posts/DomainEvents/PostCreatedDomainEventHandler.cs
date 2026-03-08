@@ -30,7 +30,6 @@ internal sealed class PostCreatedDomainEventHandler : IDomainEventHandler<PostCr
         return new MediaSnapshot
         {
             MediaId = media.Id,
-            Name = media.Name,
             Url = media.Url,
             Description = media.Description,
             Mime = media.Mime,

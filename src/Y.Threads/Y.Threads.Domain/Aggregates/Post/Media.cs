@@ -15,7 +15,6 @@ public class Media : Entity
         "video/webm"
     ];
 
-    public string Name { get; set; } = string.Empty;
     public string Mime { get; set; } = string.Empty;
     public string Url { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
@@ -24,19 +23,18 @@ public class Media : Entity
     {
     }
 
-    internal static Result<Media> Create(MediaUpload uploadMedia)
+    internal static Result<Media> Create(FileUploadResult mediaUploadResult)
     {
-        if (!IsSupportedMimeType(uploadMedia.Mime))
+        if (!IsSupportedMimeType(mediaUploadResult.Mime))
         {
             return Result.Failure<Media>(PostErrors.UnsupportedMediaType);
         }
 
         return Result.Success(new Media
         {
-            Name = uploadMedia.Name,
-            Mime = uploadMedia.Mime,
-            Url = uploadMedia.Url,
-            Description = uploadMedia.Description
+            Mime = mediaUploadResult.Mime,
+            Url = mediaUploadResult.Url,
+            Description = mediaUploadResult.Description
         });
     }
 

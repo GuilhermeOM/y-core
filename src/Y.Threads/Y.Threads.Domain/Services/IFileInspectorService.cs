@@ -1,7 +1,8 @@
 ﻿using Y.Core.SharedKernel;
+using Y.Threads.Domain.ValueObjects;
 
 namespace Y.Threads.Domain.Services;
 public interface IFileInspectorService
 {
-    Result<(string Mime, string Extension)> InspectFileStream(Stream stream);
+    Result<FileInspectionResult> InspectFileStream(Stream stream);
 }

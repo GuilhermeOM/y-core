@@ -1,6 +1,7 @@
 ﻿using MimeDetective;
 using Y.Core.SharedKernel;
 using Y.Threads.Domain.Services;
+using Y.Threads.Domain.ValueObjects;
 
 namespace Y.Threads.Infrastructure.Services;
 internal sealed class FileInspectorService : IFileInspectorService
@@ -12,7 +13,7 @@ internal sealed class FileInspectorService : IFileInspectorService
         _contentInspector = contentInspector;
     }
 
-    public Result<(string Mime, string Extension)> InspectFileStream(Stream stream)
+    public Result<FileInspectionResult> InspectFileStream(Stream stream)
     {
         var inspect = _contentInspector.Inspect(stream);
 
@@ -21,7 +22,7 @@ internal sealed class FileInspectorService : IFileInspectorService
 
         if (string.IsNullOrWhiteSpace(mime))
         {
-            return Result.Failure<(string Mime, string Extension)>(InspectionErrors.UnableToDetermineMime);
+            return Result.Failure<FileInspectionResult>(InspectionErrors.UnableToDetermineMime);
         }
 
         var extensionResults = inspect.ByFileExtension();
@@ -29,10 +30,10 @@ internal sealed class FileInspectorService : IFileInspectorService
 
         if (string.IsNullOrWhiteSpace(mime) || string.IsNullOrWhiteSpace(extension))
         {
-            return Result.Failure<(string Mime, string Extension)>(InspectionErrors.UnableToDetermineExtension);
+            return Result.Failure<FileInspectionResult>(InspectionErrors.UnableToDetermineExtension);
         }
 
-        return Result.Success((mime, extension));
+        return Result.Success(new FileInspectionResult(mime, extension));
     }
 }
 

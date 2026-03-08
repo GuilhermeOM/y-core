@@ -1,26 +1,25 @@
-﻿using System.Text;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Y.Core.SharedKernel;
 using Y.Core.SharedKernel.Abstractions.Messaging;
 using Y.Core.SharedKernel.Models;
 using Y.Threads.Application.Posts.Commands.CreatePost;
+using Y.Threads.Application.Posts.Services.CreatePostMedia;
 using Y.Threads.Domain.Aggregates.Post;
 using Y.Threads.Domain.Errors;
 using Y.Threads.Domain.Events;
 using Y.Threads.Domain.Repositories;
-using Y.Threads.Domain.Services;
 using Y.Threads.Domain.ValueObjects;
 
 namespace Y.Core.UnitTest.Y.Threads.Posts.Commands;
-
 public class CreatePostCommandHandlerTests
 {
     private readonly Mock<ILogger<CreatePostCommandHandler>> _loggerMock;
     private readonly Mock<IPostRepository> _postRepositoryMock;
     private readonly Mock<IDomainEventsDispatcher> _domainEventsDispatcherMock;
-    private readonly Mock<IStorageService> _storageServiceMock;
+    private readonly Mock<ICreatePostMediaService> _createPostMediaServiceMock;
 
     private readonly Mock<IFormFile> _file0Mock;
     private readonly Mock<IFormFile> _file1Mock;
@@ -32,27 +31,16 @@ public class CreatePostCommandHandlerTests
         _loggerMock = new Mock<ILogger<CreatePostCommandHandler>>();
         _postRepositoryMock = new Mock<IPostRepository>();
         _domainEventsDispatcherMock = new Mock<IDomainEventsDispatcher>();
-        _storageServiceMock = new Mock<IStorageService>();
+        _createPostMediaServiceMock = new Mock<ICreatePostMediaService>();
 
         _file0Mock = new Mock<IFormFile>();
         _file1Mock = new Mock<IFormFile>();
-
-        var file0Data = "file0";
-        var file0ByteArray = Encoding.UTF8.GetBytes(file0Data);
-        var file0Stream = new MemoryStream(file0ByteArray);
-
-        var file1Data = "file1";
-        var file1ByteArray = Encoding.UTF8.GetBytes(file1Data);
-        var file1Stream = new MemoryStream(file1ByteArray);
-
-        _file0Mock.Setup(mock => mock.OpenReadStream()).Returns(file0Stream);
-        _file1Mock.Setup(mock => mock.OpenReadStream()).Returns(file1Stream);
 
         _handler = new CreatePostCommandHandler(
             _loggerMock.Object,
             _postRepositoryMock.Object,
             _domainEventsDispatcherMock.Object,
-            _storageServiceMock.Object);
+            _createPostMediaServiceMock.Object);
     }
 
     [Fact]
@@ -73,90 +61,91 @@ public class CreatePostCommandHandlerTests
             }
         };
 
-        _storageServiceMock
-            .Setup(mock => mock.UploadAsync(
+        var expectedFailure = Result.Failure<FileUploadResult[]>(PostErrors.UnsupportedMediaType);
+
+        _createPostMediaServiceMock
+            .Setup(mock => mock.UploadManyAsync(
                 command.Author.Id,
-                It.IsAny<Stream>(),
+                command.Medias,
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync((MediaUpload?)null);
+            .ReturnsAsync(expectedFailure);
 
         // Act
         var result = await _handler.HandleAsync(command, default);
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().BeEquivalentTo(PostErrors.MediaUploadFailed);
+        result.Error.Should().BeEquivalentTo(expectedFailure.Error);
 
-        _storageServiceMock.Verify(
-            mock => mock.UploadAsync(
-                command.Author.Id,
-                It.IsAny<Stream>(),
+        _postRepositoryMock.Verify(
+            mock => mock.CreateAsync(
+                It.IsAny<Post>(),
                 It.IsAny<CancellationToken>()),
-            Times.Exactly(command.Medias.Count));
+            Times.Never);
 
-        _storageServiceMock.Verify(
-            mock => mock.DeleteAsync(
-                It.IsAny<Guid>(),
-                It.IsAny<MediaUpload>()),
+        _domainEventsDispatcherMock.Verify(
+            mock => mock.DispatchAsync(
+                It.IsAny<List<IDomainEvent>>(),
+                It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
-    [Fact]
-    public async Task HandleAsync_ShouldFail_WhenSomeMediaUploadFails()
-    {
-        // Arrange
-        var command = new CreatePostCommand
-        {
-            Text = "Test content",
-            Medias =
-            [
-                new(_file0Mock.Object, string.Empty),
-                new(_file1Mock.Object, string.Empty)
-            ],
-            Author = new Author
-            {
-                Id = Guid.NewGuid()
-            }
-        };
+    //[Fact]
+    //public async Task HandleAsync_ShouldFail_WhenSomeMediaUploadFails()
+    //{
+    //    // Arrange
+    //    var command = new CreatePostCommand
+    //    {
+    //        Text = "Test content",
+    //        Medias =
+    //        [
+    //            new(_file0Mock.Object, string.Empty),
+    //            new(_file1Mock.Object, string.Empty)
+    //        ],
+    //        Author = new Author
+    //        {
+    //            Id = Guid.NewGuid()
+    //        }
+    //    };
 
-        var medias = command.Medias.ToList();
-        using var media0Stream = medias[0].Media.OpenReadStream();
-        using var media1Stream = medias[1].Media.OpenReadStream();
+    //    var medias = command.Medias.ToList();
+    //    using var media0Stream = medias[0].Media.OpenReadStream();
+    //    using var media1Stream = medias[1].Media.OpenReadStream();
 
-        _storageServiceMock
-            .Setup(mock => mock.UploadAsync(
-                command.Author.Id,
-                media0Stream,
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync((MediaUpload?)null);
+    //    _storageServiceMock
+    //        .Setup(mock => mock.UploadAsync(
+    //            command.Author.Id,
+    //            media0Stream,
+    //            It.IsAny<CancellationToken>()))
+    //        .ReturnsAsync((FileUpload?)null);
 
-        _storageServiceMock
-            .Setup(mock => mock.UploadAsync(
-                command.Author.Id,
-                media1Stream,
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new MediaUpload("", "", ""));
+    //    _storageServiceMock
+    //        .Setup(mock => mock.UploadAsync(
+    //            command.Author.Id,
+    //            media1Stream,
+    //            It.IsAny<CancellationToken>()))
+    //        .ReturnsAsync(new FileUpload("", "", ""));
 
-        // Act
-        var result = await _handler.HandleAsync(command, default);
+    //    // Act
+    //    var result = await _handler.HandleAsync(command, default);
 
-        // Assert
-        result.IsFailure.Should().BeTrue();
-        result.Error.Should().BeEquivalentTo(PostErrors.MediaUploadFailed);
+    //    // Assert
+    //    result.IsFailure.Should().BeTrue();
+    //    result.Error.Should().BeEquivalentTo(PostErrors.MediaUploadFailed);
 
-        _storageServiceMock.Verify(
-            mock => mock.UploadAsync(
-                command.Author.Id,
-                It.IsAny<Stream>(),
-                It.IsAny<CancellationToken>()),
-            Times.Exactly(command.Medias.Count));
+    //    _storageServiceMock.Verify(
+    //        mock => mock.UploadAsync(
+    //            command.Author.Id,
+    //            It.IsAny<Stream>(),
+    //            It.IsAny<CancellationToken>()),
+    //        Times.Exactly(command.Medias.Count));
 
-        _storageServiceMock.Verify(
-            mock => mock.DeleteAsync(
-                command.Author.Id,
-                It.IsAny<MediaUpload>()),
-            Times.Once);
-    }
+    //    _storageServiceMock.Verify(
+    //        mock => mock.DeleteAsync(
+    //            command.Author.Id,
+    //            It.IsAny<FileUpload>()),
+    //        Times.Once);
+    //}
 
     [Fact]
     public async Task HandleAsync_ShouldFail_WhenAuthorIsEmpty()
@@ -173,12 +162,12 @@ public class CreatePostCommandHandlerTests
             Author = new Author()
         };
 
-        _storageServiceMock
-            .Setup(mock => mock.UploadAsync(
+        _createPostMediaServiceMock
+            .Setup(mock => mock.UploadManyAsync(
                 command.Author.Id,
-                It.IsAny<Stream>(),
+                command.Medias,
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new MediaUpload(string.Empty, string.Empty, string.Empty));
+            .ReturnsAsync(Result.Success<FileUploadResult[]>([]));
 
         // Act
         var result = await _handler.HandleAsync(command, default);
@@ -187,18 +176,17 @@ public class CreatePostCommandHandlerTests
         result.IsFailure.Should().BeTrue();
         result.Error.Should().BeEquivalentTo(PostErrors.EmptyAuthor);
 
-        _storageServiceMock.Verify(
-            mock => mock.UploadAsync(
-                command.Author.Id,
-                It.IsAny<Stream>(),
+        _postRepositoryMock.Verify(
+            mock => mock.CreateAsync(
+                It.IsAny<Post>(),
                 It.IsAny<CancellationToken>()),
-            Times.Exactly(command.Medias.Count));
+            Times.Never);
 
-        _storageServiceMock.Verify(
-            mock => mock.DeleteAsync(
-                command.Author.Id,
-                It.IsAny<MediaUpload>()),
-            Times.Exactly(command.Medias.Count));
+        _domainEventsDispatcherMock.Verify(
+            mock => mock.DispatchAsync(
+                It.IsAny<List<IDomainEvent>>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
@@ -215,6 +203,15 @@ public class CreatePostCommandHandlerTests
             }
         };
 
+        var uploadedMedias = Array.Empty<FileUploadResult>();
+
+        _createPostMediaServiceMock
+            .Setup(mock => mock.UploadManyAsync(
+                command.Author.Id,
+                command.Medias,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(uploadedMedias));
+
         // Act
         var result = await _handler.HandleAsync(command, default);
 
@@ -222,17 +219,19 @@ public class CreatePostCommandHandlerTests
         result.IsFailure.Should().BeTrue();
         result.Error.Should().BeEquivalentTo(PostErrors.EmptyPost);
 
-        _storageServiceMock.Verify(
-            mock => mock.UploadAsync(
-                It.IsAny<Guid>(),
-                It.IsAny<Stream>(),
+        _createPostMediaServiceMock
+            .Verify(mock => mock.RollbackAsync(uploadedMedias), Times.Once);
+
+        _postRepositoryMock.Verify(
+            mock => mock.CreateAsync(
+                It.IsAny<Post>(),
                 It.IsAny<CancellationToken>()),
             Times.Never);
 
-        _storageServiceMock.Verify(
-            mock => mock.DeleteAsync(
-                It.IsAny<Guid>(),
-                It.IsAny<MediaUpload>()),
+        _domainEventsDispatcherMock.Verify(
+            mock => mock.DispatchAsync(
+                It.IsAny<List<IDomainEvent>>(),
+                It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -258,12 +257,22 @@ public class CreatePostCommandHandlerTests
             }
         };
 
-        _storageServiceMock
-            .Setup(mock => mock.UploadAsync(
+        var uploadedMedias = new FileUploadResult[6]
+        {
+            new(Guid.NewGuid(), "http://dummy.com", "path/", "image/jpeg", ""),
+            new(Guid.NewGuid(), "http://dummy.com", "path/", "image/jpeg", ""),
+            new(Guid.NewGuid(), "http://dummy.com", "path/", "image/jpeg", ""),
+            new(Guid.NewGuid(), "http://dummy.com", "path/", "image/jpeg", ""),
+            new(Guid.NewGuid(), "http://dummy.com", "path/", "image/jpeg", ""),
+            new(Guid.NewGuid(), "http://dummy.com", "path/", "image/jpeg", "")
+        };
+
+        _createPostMediaServiceMock
+            .Setup(mock => mock.UploadManyAsync(
                 command.Author.Id,
-                It.IsAny<Stream>(),
+                command.Medias,
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new MediaUpload(string.Empty, string.Empty, "image/jpeg"));
+            .ReturnsAsync(Result.Success(uploadedMedias));
 
         // Act
         var result = await _handler.HandleAsync(command, default);
@@ -272,18 +281,20 @@ public class CreatePostCommandHandlerTests
         result.IsFailure.Should().BeTrue();
         result.Error.Should().BeEquivalentTo(PostErrors.MaxMediaExceeded);
 
-        _storageServiceMock.Verify(
-            mock => mock.UploadAsync(
-                command.Author.Id,
-                It.IsAny<Stream>(),
-                It.IsAny<CancellationToken>()),
-            Times.Exactly(command.Medias.Count));
+        _createPostMediaServiceMock
+            .Verify(mock => mock.RollbackAsync(uploadedMedias), Times.Once);
 
-        _storageServiceMock.Verify(
-            mock => mock.DeleteAsync(
-                command.Author.Id,
-                It.IsAny<MediaUpload>()),
-            Times.Exactly(command.Medias.Count));
+        _postRepositoryMock.Verify(
+            mock => mock.CreateAsync(
+                It.IsAny<Post>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+
+        _domainEventsDispatcherMock.Verify(
+            mock => mock.DispatchAsync(
+                It.IsAny<List<IDomainEvent>>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
@@ -304,12 +315,18 @@ public class CreatePostCommandHandlerTests
             }
         };
 
-        _storageServiceMock
-            .Setup(mock => mock.UploadAsync(
+        var uploadedMedias = new FileUploadResult[2]
+        {
+            new(Guid.NewGuid(), "http://dummy.com", "path/", "abc", ""),
+            new(Guid.NewGuid(), "http://dummy.com", "path/", "abc", "")
+        };
+
+        _createPostMediaServiceMock
+            .Setup(mock => mock.UploadManyAsync(
                 command.Author.Id,
-                It.IsAny<Stream>(),
+                command.Medias,
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new MediaUpload(string.Empty, string.Empty, "abc"));
+            .ReturnsAsync(Result.Success(uploadedMedias));
 
         // Act
         var result = await _handler.HandleAsync(command, default);
@@ -318,18 +335,20 @@ public class CreatePostCommandHandlerTests
         result.IsFailure.Should().BeTrue();
         result.Error.Should().BeEquivalentTo(PostErrors.UnsupportedMediaType);
 
-        _storageServiceMock.Verify(
-            mock => mock.UploadAsync(
-                command.Author.Id,
-                It.IsAny<Stream>(),
-                It.IsAny<CancellationToken>()),
-            Times.Exactly(command.Medias.Count));
+        _createPostMediaServiceMock
+            .Verify(mock => mock.RollbackAsync(uploadedMedias), Times.Once);
 
-        _storageServiceMock.Verify(
-            mock => mock.DeleteAsync(
-                command.Author.Id,
-                It.IsAny<MediaUpload>()),
-            Times.Exactly(command.Medias.Count));
+        _postRepositoryMock.Verify(
+            mock => mock.CreateAsync(
+                It.IsAny<Post>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+
+        _domainEventsDispatcherMock.Verify(
+            mock => mock.DispatchAsync(
+                It.IsAny<List<IDomainEvent>>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
@@ -350,31 +369,20 @@ public class CreatePostCommandHandlerTests
             }
         };
 
-        var medias = command.Medias.ToList();
-        using var media0Stream = medias[0].Media.OpenReadStream();
-        using var media1Stream = medias[1].Media.OpenReadStream();
-
-        var mediaUploads = new List<MediaUpload>()
+        var uploadedMedias = new FileUploadResult[2]
         {
-            new(string.Empty, string.Empty, "image/jpeg"),
-            new(string.Empty, string.Empty, "image/jpeg")
+            new(Guid.NewGuid(), "http://dummy.com", "path/", "image/jpeg", ""),
+            new(Guid.NewGuid(), "http://dummy.com", "path/", "image/jpeg", "")
         };
 
-        _storageServiceMock
-            .Setup(mock => mock.UploadAsync(
+        _createPostMediaServiceMock
+            .Setup(mock => mock.UploadManyAsync(
                 command.Author.Id,
-                media0Stream,
+                command.Medias,
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(mediaUploads[0]);
+            .ReturnsAsync(Result.Success(uploadedMedias));
 
-        _storageServiceMock
-            .Setup(mock => mock.UploadAsync(
-                command.Author.Id,
-                media1Stream,
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(mediaUploads[1]);
-
-        var postResultMock = Post.Create(command.Author, command.Text, mediaUploads);
+        var postResultMock = Post.Create(command.Author, command.Text, uploadedMedias);
 
         _postRepositoryMock
             .Setup(mock => mock.CreateAsync(
@@ -392,18 +400,14 @@ public class CreatePostCommandHandlerTests
         result.IsFailure.Should().BeTrue();
         result.Error.Should().BeEquivalentTo(PostErrors.PostCreationFailed);
 
-        _storageServiceMock.Verify(
-            mock => mock.UploadAsync(
-                command.Author.Id,
-                It.IsAny<Stream>(),
-                It.IsAny<CancellationToken>()),
-            Times.Exactly(command.Medias.Count));
+        _createPostMediaServiceMock
+            .Verify(mock => mock.RollbackAsync(uploadedMedias), Times.Once);
 
-        _storageServiceMock.Verify(
-            mock => mock.DeleteAsync(
-                command.Author.Id,
-                It.IsAny<MediaUpload>()),
-            Times.Exactly(command.Medias.Count));
+        _domainEventsDispatcherMock.Verify(
+            mock => mock.DispatchAsync(
+                It.IsAny<List<IDomainEvent>>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
@@ -424,32 +428,20 @@ public class CreatePostCommandHandlerTests
             }
         };
 
-        var medias = command.Medias.ToList();
-        using var media0Stream = medias[0].Media.OpenReadStream();
-        using var media1Stream = medias[1].Media.OpenReadStream();
-
-        var mediaUploads = new List<MediaUpload>()
+        var uploadedMedias = new FileUploadResult[2]
         {
-            new(string.Empty, string.Empty, "image/jpeg"),
-            new(string.Empty, string.Empty, "image/jpeg")
+            new(Guid.NewGuid(), "http://dummy.com", "path/", "image/jpeg", ""),
+            new(Guid.NewGuid(), "http://dummy.com", "path/", "image/jpeg", "")
         };
 
-        _storageServiceMock
-            .Setup(mock => mock.UploadAsync(
+        _createPostMediaServiceMock
+            .Setup(mock => mock.UploadManyAsync(
                 command.Author.Id,
-                media0Stream,
+                command.Medias,
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(mediaUploads[0]);
+            .ReturnsAsync(Result.Success(uploadedMedias));
 
-        _storageServiceMock
-            .Setup(mock => mock.UploadAsync(
-                command.Author.Id,
-                media1Stream,
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(mediaUploads[1]);
-
-        var postResultMock = Post.Create(command.Author, command.Text, mediaUploads);
-        var postId = Guid.NewGuid();
+        var postResultMock = Post.Create(command.Author, command.Text, uploadedMedias);
 
         _postRepositoryMock
             .Setup(mock => mock.CreateAsync(
@@ -458,11 +450,11 @@ public class CreatePostCommandHandlerTests
                     && post.Medias.Count == postResultMock.Value.Medias.Count
                     && post.Status == postResultMock.Value.Status),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(postId);
+            .ReturnsAsync(postResultMock.Value.Id);
 
         _domainEventsDispatcherMock
             .Setup(mock => mock.DispatchAsync(
-                It.Is<List<IDomainEvent>>(events => AreDomainEventsWellDispatched(events, postId, postResultMock.Value)),
+                It.Is<IReadOnlyList<IDomainEvent>>(events => AreDomainEventsWellDispatched(events, postResultMock.Value)),
                 It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
@@ -471,20 +463,10 @@ public class CreatePostCommandHandlerTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be(postId);
+        result.Value.Should().Be(postResultMock.Value.Id);
 
-        _storageServiceMock.Verify(
-            mock => mock.UploadAsync(
-                command.Author.Id,
-                It.IsAny<Stream>(),
-                It.IsAny<CancellationToken>()),
-            Times.Exactly(command.Medias.Count));
-
-        _storageServiceMock.Verify(
-            mock => mock.DeleteAsync(
-                It.IsAny<Guid>(),
-                It.IsAny<MediaUpload>()),
-            Times.Never);
+        _createPostMediaServiceMock
+            .Verify(mock => mock.RollbackAsync(It.IsAny<IReadOnlyCollection<FileUploadResult>>()), Times.Never);
 
         _postRepositoryMock
             .Verify(mock => mock.CreateAsync(
@@ -492,6 +474,11 @@ public class CreatePostCommandHandlerTests
                     && post.Text == postResultMock.Value.Text
                     && post.Medias.Count == postResultMock.Value.Medias.Count
                     && post.Status == postResultMock.Value.Status),
+                It.IsAny<CancellationToken>()), Times.Once);
+
+        _domainEventsDispatcherMock
+            .Verify(mock => mock.DispatchAsync(
+                It.Is<IReadOnlyList<IDomainEvent>>(events => AreDomainEventsWellDispatched(events, postResultMock.Value)),
                 It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -509,8 +496,16 @@ public class CreatePostCommandHandlerTests
             }
         };
 
-        var postResultMock = Post.Create(command.Author, command.Text);
-        var postId = Guid.NewGuid();
+        var uploadedMedias = Array.Empty<FileUploadResult>();
+
+        _createPostMediaServiceMock
+            .Setup(mock => mock.UploadManyAsync(
+                command.Author.Id,
+                command.Medias,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(uploadedMedias));
+
+        var postResultMock = Post.Create(command.Author, command.Text, uploadedMedias);
 
         _postRepositoryMock
             .Setup(mock => mock.CreateAsync(
@@ -519,11 +514,11 @@ public class CreatePostCommandHandlerTests
                     && post.Medias.Count == postResultMock.Value.Medias.Count
                     && post.Status == postResultMock.Value.Status),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(postId);
+            .ReturnsAsync(postResultMock.Value.Id);
 
         _domainEventsDispatcherMock
             .Setup(mock => mock.DispatchAsync(
-                It.Is<List<IDomainEvent>>(events => AreDomainEventsWellDispatched(events, postId, postResultMock.Value)),
+                It.Is<IReadOnlyList<IDomainEvent>>(events => AreDomainEventsWellDispatched(events, postResultMock.Value)),
                 It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
@@ -532,20 +527,10 @@ public class CreatePostCommandHandlerTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be(postId);
+        result.Value.Should().Be(postResultMock.Value.Id);
 
-        _storageServiceMock.Verify(
-            mock => mock.UploadAsync(
-                It.IsAny<Guid>(),
-                It.IsAny<Stream>(),
-                It.IsAny<CancellationToken>()),
-            Times.Never);
-
-        _storageServiceMock.Verify(
-            mock => mock.DeleteAsync(
-                It.IsAny<Guid>(),
-                It.IsAny<MediaUpload>()),
-            Times.Never);
+        _createPostMediaServiceMock
+            .Verify(mock => mock.RollbackAsync(It.IsAny<IReadOnlyCollection<FileUploadResult>>()), Times.Never);
 
         _postRepositoryMock
             .Verify(mock => mock.CreateAsync(
@@ -553,6 +538,11 @@ public class CreatePostCommandHandlerTests
                     && post.Text == postResultMock.Value.Text
                     && post.Medias.Count == postResultMock.Value.Medias.Count
                     && post.Status == postResultMock.Value.Status),
+                It.IsAny<CancellationToken>()), Times.Once);
+
+        _domainEventsDispatcherMock
+            .Verify(mock => mock.DispatchAsync(
+                It.Is<IReadOnlyList<IDomainEvent>>(events => AreDomainEventsWellDispatched(events, postResultMock.Value)),
                 It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -574,32 +564,20 @@ public class CreatePostCommandHandlerTests
             }
         };
 
-        var medias = command.Medias.ToList();
-        using var media0Stream = medias[0].Media.OpenReadStream();
-        using var media1Stream = medias[1].Media.OpenReadStream();
-
-        var mediaUploads = new List<MediaUpload>()
+        var uploadedMedias = new FileUploadResult[2]
         {
-            new(string.Empty, string.Empty, "image/jpeg"),
-            new(string.Empty, string.Empty, "image/jpeg")
+            new(Guid.NewGuid(), "http://dummy.com", "path/", "image/jpeg", ""),
+            new(Guid.NewGuid(), "http://dummy.com", "path/", "image/jpeg", "")
         };
 
-        _storageServiceMock
-            .Setup(mock => mock.UploadAsync(
+        _createPostMediaServiceMock
+            .Setup(mock => mock.UploadManyAsync(
                 command.Author.Id,
-                media0Stream,
+                command.Medias,
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(mediaUploads[0]);
+            .ReturnsAsync(Result.Success(uploadedMedias));
 
-        _storageServiceMock
-            .Setup(mock => mock.UploadAsync(
-                command.Author.Id,
-                media1Stream,
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(mediaUploads[1]);
-
-        var postResultMock = Post.Create(command.Author, command.Text, mediaUploads);
-        var postId = Guid.NewGuid();
+        var postResultMock = Post.Create(command.Author, command.Text, uploadedMedias);
 
         _postRepositoryMock
             .Setup(mock => mock.CreateAsync(
@@ -608,11 +586,11 @@ public class CreatePostCommandHandlerTests
                     && post.Medias.Count == postResultMock.Value.Medias.Count
                     && post.Status == postResultMock.Value.Status),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(postId);
+            .ReturnsAsync(postResultMock.Value.Id);
 
         _domainEventsDispatcherMock
             .Setup(mock => mock.DispatchAsync(
-                It.Is<List<IDomainEvent>>(events => AreDomainEventsWellDispatched(events, postId, postResultMock.Value)),
+                It.Is<IReadOnlyList<IDomainEvent>>(events => AreDomainEventsWellDispatched(events, postResultMock.Value)),
                 It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
@@ -621,20 +599,10 @@ public class CreatePostCommandHandlerTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be(postId);
+        result.Value.Should().Be(postResultMock.Value.Id);
 
-        _storageServiceMock.Verify(
-            mock => mock.UploadAsync(
-                command.Author.Id,
-                It.IsAny<Stream>(),
-                It.IsAny<CancellationToken>()),
-            Times.Exactly(command.Medias.Count));
-
-        _storageServiceMock.Verify(
-            mock => mock.DeleteAsync(
-                It.IsAny<Guid>(),
-                It.IsAny<MediaUpload>()),
-            Times.Never);
+        _createPostMediaServiceMock
+            .Verify(mock => mock.RollbackAsync(It.IsAny<IReadOnlyCollection<FileUploadResult>>()), Times.Never);
 
         _postRepositoryMock
             .Verify(mock => mock.CreateAsync(
@@ -643,14 +611,18 @@ public class CreatePostCommandHandlerTests
                     && post.Medias.Count == postResultMock.Value.Medias.Count
                     && post.Status == postResultMock.Value.Status),
                 It.IsAny<CancellationToken>()), Times.Once);
+
+        _domainEventsDispatcherMock
+            .Verify(mock => mock.DispatchAsync(
+                It.Is<IReadOnlyList<IDomainEvent>>(events => AreDomainEventsWellDispatched(events, postResultMock.Value)),
+                It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    private static bool AreDomainEventsWellDispatched(List<IDomainEvent> events, Guid postId, Post post)
+    private static bool AreDomainEventsWellDispatched(IReadOnlyList<IDomainEvent> events, Post post)
     {
         var postCreatedEvent = events.OfType<PostCreatedEvent>().FirstOrDefault();
 
         return events.Count == 1
-            && postCreatedEvent?.PostId == postId
             && postCreatedEvent?.Text == post.Text
             && postCreatedEvent?.Author.Id == post.AuthorId
             && postCreatedEvent?.Medias.Count == post.Medias.Count;

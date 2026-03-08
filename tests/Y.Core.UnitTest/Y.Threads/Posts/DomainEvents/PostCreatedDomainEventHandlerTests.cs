@@ -29,7 +29,7 @@ public class PostCreatedDomainEventHandlerTests
         var post = Post.Create(
             new Author { Id = Guid.NewGuid() },
             "Dummy text",
-            [new MediaUpload(string.Empty, string.Empty, "image/jpeg")]);
+            [new FileUploadResult(Guid.NewGuid(), string.Empty, string.Empty, "image/jpeg", string.Empty)]);
 
         var domainEvent = new PostCreatedEvent(
             post.Value.Id,

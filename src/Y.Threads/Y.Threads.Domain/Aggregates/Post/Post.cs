@@ -28,7 +28,7 @@ public class Post : AggregateRoot
         Status = status;
     }
 
-    public static Result<Post> Create(Author author, string text = "", IReadOnlyCollection<MediaUpload>? medias = null)
+    public static Result<Post> Create(Author author, string text = "", IReadOnlyCollection<FileUploadResult>? medias = null)
     {
         medias ??= [];
 
@@ -59,7 +59,7 @@ public class Post : AggregateRoot
         return Result.Success(post);
     }
 
-    public Result AddMedia(MediaUpload media)
+    public Result AddMedia(FileUploadResult media)
     {
         if (_medias.Count > MaxAllowedMedias)
         {
