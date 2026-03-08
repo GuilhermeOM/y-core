@@ -6,9 +6,8 @@ using Microsoft.Extensions.Options;
 using Moq;
 using Polly;
 using Polly.Registry;
-using Y.Core.SharedKernel;
 using Y.Threads.Domain.Options;
-using Y.Threads.Domain.Services;
+using Y.Threads.Domain.ValueObjects;
 using Y.Threads.Infrastructure.Resilience;
 using Y.Threads.Infrastructure.Services;
 
@@ -17,7 +16,6 @@ public class StorageServiceTests
 {
     private readonly Mock<BlobServiceClient> _blobServiceClientMock;
     private readonly Mock<ResiliencePipelineProvider<string>> _resiliencePipelineProviderMock;
-    private readonly Mock<IFileInspectorService> _fileInspectorServiceMock;
     private readonly Mock<IOptions<BlobStorageOptions>> _blobStorageOptionsMock;
     private readonly Mock<BlobContainerClient> _blobContainerClientMock;
     private readonly Mock<BlobClient> _blobClientMock;
@@ -28,7 +26,6 @@ public class StorageServiceTests
     {
         _blobServiceClientMock = new Mock<BlobServiceClient>();
         _resiliencePipelineProviderMock = new Mock<ResiliencePipelineProvider<string>>();
-        _fileInspectorServiceMock = new Mock<IFileInspectorService>();
         _blobStorageOptionsMock = new Mock<IOptions<BlobStorageOptions>>();
         _blobContainerClientMock = new Mock<BlobContainerClient>();
         _blobClientMock = new Mock<BlobClient>();
@@ -51,40 +48,19 @@ public class StorageServiceTests
         _service = new StorageService(
             _blobServiceClientMock.Object,
             _resiliencePipelineProviderMock.Object,
-            _fileInspectorServiceMock.Object,
             _blobStorageOptionsMock.Object);
     }
 
     [Fact]
-    public async Task UploadAsync_ShouldReturnNull_WhenFileInspectionFails()
+    public async Task UploadAsync_ShouldReturnFailure_WhenMediaUploadFails()
     {
         // Arrange
-        var userId = Guid.NewGuid();
-        var stream = new MemoryStream([0x00, 0x01, 0x02]);
-
-        _fileInspectorServiceMock
-            .Setup(mock => mock.InspectFileStream(stream))
-            .Returns(Result.Failure<(string Mime, string Extension)>(new Error("Inspection.Failed", "File inspection failed")));
-
-        // Act
-        var result = await _service.UploadAsync(userId, stream);
-
-        // Assert
-        result.Should().BeNull();
-    }
-
-    [Fact]
-    public async Task UploadAsync_ShouldReturnNull_WhenMediaUploadFails()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var stream = new MemoryStream([0x00, 0x01, 0x02]);
-        const string mime = "image/jpeg";
-        const string extension = "jpg";
-
-        _fileInspectorServiceMock
-            .Setup(mock => mock.InspectFileStream(stream))
-            .Returns(Result.Success((mime, extension)));
+        var fileUpload = new FileUpload(
+            Guid.NewGuid(),
+            new MemoryStream([0x00, 0x01, 0x02]),
+            $"{StorageService.ImagePathName}/file.jpg",
+            "image/jpeg",
+            "jpg");
 
         _blobContainerClientMock
             .Setup(mock => mock.GetBlobClient(It.IsAny<string>()))
@@ -95,8 +71,8 @@ public class StorageServiceTests
 
         _blobClientMock
             .Setup(client => client.UploadAsync(
-                stream,
-                It.Is<BlobHttpHeaders>(headers => headers.ContentType == mime && headers.CacheControl == "public, max-age=31536000"),
+                fileUpload.Data,
+                It.Is<BlobHttpHeaders>(headers => headers.ContentType == fileUpload.Mime && headers.CacheControl == "public, max-age=31536000"),
                 default,
                 default,
                 default,
@@ -106,24 +82,23 @@ public class StorageServiceTests
             .ReturnsAsync(responseMock.Object);
 
         // Act
-        var result = await _service.UploadAsync(userId, stream);
+        var result = await _service.UploadAsync(fileUpload, default);
 
         // Assert
-        result.Should().BeNull();
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().BeEquivalentTo(StorageServiceErrors.BlobStorageFailure);
     }
 
     [Fact]
-    public async Task UploadAsync_ShouldSucceed_WhenUploadingImage()
+    public async Task UploadAsync_ShouldSucceed()
     {
         // Arrange
-        var userId = Guid.NewGuid();
-        var stream = new MemoryStream([0x00, 0x01, 0x02]);
-        const string mime = "image/jpeg";
-        const string extension = "jpg";
-
-        _fileInspectorServiceMock
-            .Setup(service => service.InspectFileStream(stream))
-            .Returns(Result.Success((mime, extension)));
+        var fileUpload = new FileUpload(
+            Guid.NewGuid(),
+            new MemoryStream([0x00, 0x01, 0x02]),
+            $"{StorageService.ImagePathName}/file.jpg",
+            "image/jpeg",
+            "jpg");
 
         _blobContainerClientMock
             .Setup(client => client.GetBlobClient(It.IsAny<string>()))
@@ -134,8 +109,8 @@ public class StorageServiceTests
 
         _blobClientMock
             .Setup(client => client.UploadAsync(
-                stream,
-                It.Is<BlobHttpHeaders>(headers => headers.ContentType == mime && headers.CacheControl == "public, max-age=31536000"),
+                fileUpload.Data,
+                It.Is<BlobHttpHeaders>(headers => headers.ContentType == fileUpload.Mime && headers.CacheControl == "public, max-age=31536000"),
                 default,
                 default,
                 default,
@@ -145,60 +120,35 @@ public class StorageServiceTests
             .ReturnsAsync(responseMock.Object);
 
         // Act
-        var result = await _service.UploadAsync(userId, stream);
+        var result = await _service.UploadAsync(fileUpload, default);
 
         // Assert
-        result.Should().NotBeNull();
-        result.Name.Should().NotBeNullOrEmpty();
-        result.Name.Should().EndWith($".{extension}");
-        result.Mime.Should().Be(mime);
-        result.Url.Should().NotBeNullOrEmpty();
-        result.Url.Should().StartWith($"{_blobStorageOptionsMock.Object.Value.BaseUrl}/{StorageService.PublicThreadsContainerName}/{StorageService.ImagePathName}/");
-        result.Url.Should().Contain(userId.ToString("N"));
+        var expectedUrl = $"{_blobStorageOptionsMock.Object.Value.BaseUrl}/{StorageService.PublicThreadsContainerName}/{fileUpload.Path}";
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.BlobId.Should().Be(fileUpload.BlobId);
+        result.Value.Path.Should().Be(fileUpload.Path);
+        result.Value.Mime.Should().Be(fileUpload.Mime);
+        result.Value.Description.Should().Be(fileUpload.Description);
+        result.Value.Url.Should().Be(expectedUrl);
     }
 
     [Fact]
-    public async Task UploadAsync_ShouldSucceed_WhenUploadingVideo()
+    public async Task DeleteAsync_ShouldSucceed()
     {
         // Arrange
-        var userId = Guid.NewGuid();
-        var stream = new MemoryStream([0x00, 0x01, 0x02]);
-        const string mime = "video/mp4";
-        const string extension = "mp4";
-
-        _fileInspectorServiceMock
-            .Setup(service => service.InspectFileStream(stream))
-            .Returns(Result.Success((mime, extension)));
+        var dummyFilePath = "path/to/file.jpg";
 
         _blobContainerClientMock
             .Setup(client => client.GetBlobClient(It.IsAny<string>()))
             .Returns(_blobClientMock.Object);
 
-        var responseMock = new Mock<Response<BlobContentInfo>>();
-        responseMock.SetupGet(mock => mock.GetRawResponse().Status).Returns(201);
-
-        _blobClientMock
-            .Setup(client => client.UploadAsync(
-                stream,
-                It.Is<BlobHttpHeaders>(headers => headers.ContentType == mime && headers.CacheControl == "public, max-age=31536000"),
-                default,
-                default,
-                default,
-                default,
-                default,
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(responseMock.Object);
-
         // Act
-        var result = await _service.UploadAsync(userId, stream);
+        await _service.DeleteAsync(dummyFilePath);
 
         // Assert
-        result.Should().NotBeNull();
-        result.Name.Should().NotBeNullOrEmpty();
-        result.Name.Should().EndWith($".{extension}");
-        result.Mime.Should().Be(mime);
-        result.Url.Should().NotBeNullOrEmpty();
-        result.Url.Should().StartWith($"{_blobStorageOptionsMock.Object.Value.BaseUrl}/{StorageService.PublicThreadsContainerName}/{StorageService.VideoPathname}/");
-        result.Url.Should().Contain(userId.ToString("N"));
+        _blobClientMock
+            .Verify(mock => mock.DeleteIfExistsAsync(DeleteSnapshotsOption.None, null, default));
     }
 }

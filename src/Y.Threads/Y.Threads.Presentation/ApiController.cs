@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Y.Core.SharedKernel;
 using Y.Core.SharedKernel.Models;
-using Y.Threads.Domain.Aggregates.Post;
 
 namespace Y.Threads.Presentation;
 
@@ -42,7 +41,8 @@ public abstract class ApiController : ControllerBase
         Id = Guid.Parse(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString()),
         Name = HttpContext.User.FindFirst(JwtRegisteredClaimNames.Name)?.Value ?? string.Empty,
         Email = HttpContext.User.FindFirst(ClaimTypes.Email)?.Value ?? string.Empty,
-        Birthdate = DateOnly.Parse(HttpContext.User.FindFirst(ClaimTypes.DateOfBirth)?.Value ?? DateOnly.MinValue.ToString())
+        Birthdate = DateOnly.Parse(HttpContext.User.FindFirst(ClaimTypes.DateOfBirth)?.Value ?? DateOnly.MinValue.ToString()),
+        AvatarUrl = HttpContext.User.FindFirst("avatarUrl")?.Value ?? string.Empty
     };
 }
 
