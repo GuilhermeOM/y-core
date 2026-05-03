@@ -1,7 +1,8 @@
-﻿using Serilog.Context;
+﻿using Microsoft.AspNetCore.Http;
+using Serilog.Context;
 
-namespace Y.Core.Api.Middlewares;
-internal sealed class LoggingCorrelationMiddleware
+namespace Y.Threads.Infrastructure.Middlewares;
+public sealed class LoggingCorrelationMiddleware
 {
     private const string CorrelationIdHeaderName = "X-Correlation-Id";
     private readonly RequestDelegate _next;

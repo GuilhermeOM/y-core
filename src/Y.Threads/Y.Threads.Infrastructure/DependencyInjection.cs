@@ -135,7 +135,7 @@ public static class DependencyInjection
         return services;
     }
 
-    public static IServiceCollection AddRedis(this IServiceCollection services, IConfiguration configuration)
+    private static IServiceCollection AddRedis(this IServiceCollection services, IConfiguration configuration)
     {
         var endpointsConfiguration = configuration.GetRequiredSection("Redis:Endpoints").Get<string[]>();
         var endpoints = new EndPointCollection();

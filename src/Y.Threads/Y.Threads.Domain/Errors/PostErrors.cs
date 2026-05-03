@@ -13,11 +13,10 @@ public static class PostErrors
     public static Error LikeUndefinedPost => new("LIKE_UNDEFINED_POST", "Can not like an undefined post");
     public static Error LikeWithUndefinedUser => new("LIKE_WITH_UNDEFINED_USER", "Can not like a post with undefined user");
 
-
-
     public static Error PostNotFound => new(HttpStatusCode.NotFound, "POST_NOT_FOUND", "Post not found");
     public static Error PostCreationFailed => new(HttpStatusCode.InternalServerError, "POST_CREATION_FAILED", "Post creation failed");
     public static Error MediaUploadFailed => new(HttpStatusCode.InternalServerError, "MEDIA_UPLOAD_FAILED", "Media upload failed");
+    public static Error PostReplyCreationFailed => new(HttpStatusCode.InternalServerError, "POST_REPLY_CREATION_FAILED", "Post reply creation failed");
 }
 
 public static class PostExceptions

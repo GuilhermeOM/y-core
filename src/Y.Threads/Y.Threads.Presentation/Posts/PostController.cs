@@ -5,6 +5,7 @@ using Y.Core.SharedKernel.Abstractions.Messaging;
 using Y.Threads.Application.Posts.Commands.CreatePost;
 using Y.Threads.Application.Posts.Commands.DislikePost;
 using Y.Threads.Application.Posts.Commands.LikePost;
+using Y.Threads.Application.Posts.Commands.ReplyPost;
 using Y.Threads.Application.Posts.Queries.GetPostById;
 using Y.Threads.Domain.Aggregates.Post;
 
@@ -18,17 +19,20 @@ public sealed class PostController : ApiController
     private readonly ICommandHandler<CreatePostCommand, Guid> _createPostCommandHandler;
     private readonly ICommandHandler<LikePostCommand> _likePostCommandHandler;
     private readonly ICommandHandler<DislikePostCommand> _dislikePostCommandHandler;
+    private readonly ICommandHandler<ReplyPostCommand, Guid> _replyPostCommandHandler;
 
     public PostController(
         IQueryHandler<GetPostByIdQuery, Post> getPostByIdQueryHandler,
         ICommandHandler<CreatePostCommand, Guid> createPostCommandHandler,
         ICommandHandler<LikePostCommand> likePostCommandHandler,
-        ICommandHandler<DislikePostCommand> dislikePostCommandHandler)
+        ICommandHandler<DislikePostCommand> dislikePostCommandHandler,
+        ICommandHandler<ReplyPostCommand, Guid> replyPostCommandHandler)
     {
         _getPostByIdQueryHandler = getPostByIdQueryHandler;
         _createPostCommandHandler = createPostCommandHandler;
         _likePostCommandHandler = likePostCommandHandler;
         _dislikePostCommandHandler = dislikePostCommandHandler;
+        _replyPostCommandHandler = replyPostCommandHandler;
     }
 
     [HttpGet("{id:guid}")]
@@ -54,11 +58,11 @@ public sealed class PostController : ApiController
         var result = await _createPostCommandHandler.HandleAsync(command, cancellationToken);
 
         return result.IsSuccess
-            ? Created("GetByIdAsync", new { Id = result.Value })
+            ? Created(nameof(GetByIdAsync), new { Id = result.Value })
             : HandleFailure(result);
     }
 
-    [HttpPost("like/{postId:guid}")]
+    [HttpPost("{postId:guid}/like")]
     public async Task<IActionResult> LikeAsync(
         [FromRoute] Guid postId,
         CancellationToken cancellationToken = default)
@@ -76,8 +80,7 @@ public sealed class PostController : ApiController
             : HandleFailure(result);
     }
 
-
-    [HttpPost("dislike/{postId:guid}")]
+    [HttpPost("{postId:guid}/dislike")]
     public async Task<IActionResult> DislikeAsync(
         [FromRoute] Guid postId,
         CancellationToken cancellationToken = default)
@@ -92,6 +95,27 @@ public sealed class PostController : ApiController
 
         return result.IsSuccess
             ? NoContent()
+            : HandleFailure(result);
+    }
+
+    [HttpPost("{postId:guid}/reply")]
+    public async Task<IActionResult> ReplyAsync(
+        [FromRoute] Guid postId,
+        [FromForm] PostRequests.ReplyPostRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var command = new ReplyPostCommand
+        {
+            Author = GetAuthorFromAuthorization(),
+            Text = request.Text,
+            Medias = request.Medias,
+            Parent = postId
+        };
+
+        var result = await _replyPostCommandHandler.HandleAsync(command, cancellationToken);
+
+        return result.IsSuccess
+            ? Created(nameof(GetByIdAsync), new { Id = result.Value })
             : HandleFailure(result);
     }
 }

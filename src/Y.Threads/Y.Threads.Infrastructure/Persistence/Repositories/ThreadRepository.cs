@@ -11,6 +11,14 @@ internal sealed class ThreadRepository : IThreadRepository
         _context = context;
     }
 
+    public async Task<Application.Threads.Models.Thread> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var filter = Builders<Application.Threads.Models.Thread>.Filter.Eq(thread => thread.Id, id);
+        var cursor = await _context.Threads.FindAsync(filter, cancellationToken: cancellationToken);
+
+        return await cursor.FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task<Guid> CreateAsync(Application.Threads.Models.Thread thread, CancellationToken cancellationToken = default)
     {
         await _context.Threads.InsertOneAsync(thread, default, cancellationToken);

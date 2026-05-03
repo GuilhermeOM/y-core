@@ -19,31 +19,39 @@ public abstract class ApiController : ControllerBase
             {
                 HttpStatusCode.OK => throw new InvalidOperationException("200 is not a valid error"),
                 HttpStatusCode.Unauthorized => Unauthorized(),
-                HttpStatusCode.BadRequest => BadRequest(new ErrorDetailsResponse(nameof(StatusCodes.Status400BadRequest), StatusCodes.Status400BadRequest, result.Errors)),
-                HttpStatusCode.NotFound => NotFound(new ErrorDetailsResponse(nameof(StatusCodes.Status404NotFound), StatusCodes.Status404NotFound, result.Errors)),
-                HttpStatusCode.Conflict => Conflict(new ErrorDetailsResponse(nameof(StatusCodes.Status409Conflict), StatusCodes.Status409Conflict, result.Errors)),
-                _ => CreateInternalServerError(result.Errors)
+                HttpStatusCode.BadRequest => StatusCode(HttpStatusCode.BadRequest, nameof(StatusCodes.Status400BadRequest), result.Errors),
+                HttpStatusCode.NotFound => StatusCode(HttpStatusCode.NotFound, nameof(StatusCodes.Status404NotFound), result.Errors),
+                HttpStatusCode.Conflict => StatusCode(HttpStatusCode.Conflict, nameof(StatusCodes.Status409Conflict), result.Errors),
+                _ => StatusCode(HttpStatusCode.InternalServerError, nameof(StatusCodes.Status500InternalServerError), result.Errors)
             };
         }
         catch (Exception)
         {
-            var error = new Error(HttpStatusCode.InternalServerError, "An internal error occurred");
-            return CreateInternalServerError([error]);
+            var error = new Error(HttpStatusCode.InternalServerError, nameof(StatusCodes.Status500InternalServerError), "An internal error occurred");
+            return StatusCode(error.GetStatusCode(), error.Code, [error]);
         }
     }
 
-    private ObjectResult CreateInternalServerError(Error[] errors) => StatusCode(
-        StatusCodes.Status500InternalServerError,
-        new ErrorDetailsResponse(nameof(StatusCodes.Status500InternalServerError), StatusCodes.Status500InternalServerError, errors));
-
-    protected Author GetAuthorFromAuthorization() => new()
+    private ObjectResult StatusCode(HttpStatusCode statusCode, string title, Error[] errors)
     {
-        Id = Guid.Parse(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString()),
-        Name = HttpContext.User.FindFirst(JwtRegisteredClaimNames.Name)?.Value ?? string.Empty,
-        Email = HttpContext.User.FindFirst(ClaimTypes.Email)?.Value ?? string.Empty,
-        Birthdate = DateOnly.Parse(HttpContext.User.FindFirst(ClaimTypes.DateOfBirth)?.Value ?? DateOnly.MinValue.ToString()),
-        AvatarUrl = HttpContext.User.FindFirst("avatarUrl")?.Value ?? string.Empty
-    };
+        var intStatusCode = (int)statusCode;
+        return StatusCode(intStatusCode, new ErrorDetailsResponse(title, statusCode, errors));
+    }
+
+    protected Author GetAuthorFromAuthorization()
+    {
+        var user = HttpContext.User;
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString();
+
+        return new()
+        {
+            Id = Guid.Parse(userId),
+            Name = user.FindFirst(JwtRegisteredClaimNames.Name)?.Value ?? string.Empty,
+            Email = user.FindFirst(ClaimTypes.Email)?.Value ?? string.Empty,
+            Birthdate = DateOnly.Parse(user.FindFirst(ClaimTypes.DateOfBirth)?.Value ?? DateOnly.MinValue.ToString()),
+            AvatarUrl = user.FindFirst("avatarUrl")?.Value ?? string.Empty
+        };
+    }
 }
 
-internal sealed record ErrorDetailsResponse(string Title, int Status, Error[] Errors);
+internal sealed record ErrorDetailsResponse(string Title, HttpStatusCode Status, Error[] Errors);

@@ -1,5 +1,4 @@
-﻿using Y.Core.SharedKernel;
-using Y.Core.SharedKernel.Models;
+﻿using Y.Core.SharedKernel.Models;
 using Y.Threads.Domain.Aggregates;
 using Y.Threads.Domain.Aggregates.Post;
 
@@ -18,19 +17,20 @@ public sealed class Thread : Entity
         Guid postId,
         Author author,
         string text,
-        IReadOnlyCollection<MediaSnapshot> medias)
+        IReadOnlyCollection<MediaSnapshot> medias,
+        long depth = 0)
     {
         Id = postId;
         Author = author;
         Text = text;
         Medias = medias;
+        Depth = depth;
     }
 }
 
 public sealed class MediaSnapshot
 {
     public Guid MediaId { get; set; }
-    public string Name { get; set; } = string.Empty;
     public string Url { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public string Mime { get; set; } = string.Empty;

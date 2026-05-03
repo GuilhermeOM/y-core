@@ -20,7 +20,7 @@ internal static class LoggingDecorator
             _logger = logger;
         }
 
-        public async Task<Result> HandleAsync(TCommand command, CancellationToken cancellationToken)
+        public async Task<Result> HandleAsync(TCommand command, CancellationToken cancellationToken = default)
         {
             var commandName = typeof(TCommand).Name;
 
@@ -59,7 +59,7 @@ internal static class LoggingDecorator
             _logger = logger;
         }
 
-        public async Task<Result<TResponse>> HandleAsync(TCommand command, CancellationToken cancellationToken)
+        public async Task<Result<TResponse>> HandleAsync(TCommand command, CancellationToken cancellationToken = default)
         {
             var commandName = typeof(TCommand).Name;
 
@@ -98,7 +98,7 @@ internal static class LoggingDecorator
             _logger = logger;
         }
 
-        public async Task<Result<TResponse>> HandleAsync(TQuery query, CancellationToken cancellationToken)
+        public async Task<Result<TResponse>> HandleAsync(TQuery query, CancellationToken cancellationToken = default)
         {
             var queryName = typeof(TQuery).Name;
 

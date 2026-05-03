@@ -8,7 +8,7 @@ internal interface ICreatePostMediaService
 {
     Task<Result<FileUploadResult[]>> UploadManyAsync(
         Guid userId,
-        ICollection<CreateMediaPost> medias,
+        IReadOnlyCollection<CreateMediaPost> medias,
         CancellationToken cancellationToken = default);
 
     Task RollbackAsync(IReadOnlyCollection<FileUploadResult> medias);
