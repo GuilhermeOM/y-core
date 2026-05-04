@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Serilog.Context;
 
-namespace Y.Threads.Infrastructure.Messaging.Middlwares;
+namespace Y.Threads.Infrastructure.Messaging.Middlewares;
 internal sealed class LoggingConsumerMiddleware : IMessageMiddleware
 {
     private readonly ILogger<LoggingConsumerMiddleware> _logger;

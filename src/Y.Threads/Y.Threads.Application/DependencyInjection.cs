@@ -21,7 +21,7 @@ public static class DependencyInjection
 
     private static IServiceCollection AddCommands(this IServiceCollection services)
     {
-        services.Scan(scan => scan.FromAssembliesOf(typeof(DependencyInjection))
+        services.Scan(scan => scan.FromAssembliesOf(typeof(AssemblyReference))
             .AddClasses(classes => classes.AssignableTo(typeof(ICommandHandler<>)), publicOnly: false)
                 .AsImplementedInterfaces()
                 .WithScopedLifetime()
@@ -34,7 +34,7 @@ public static class DependencyInjection
 
     private static IServiceCollection AddQueries(this IServiceCollection services)
     {
-        services.Scan(scan => scan.FromAssembliesOf(typeof(DependencyInjection))
+        services.Scan(scan => scan.FromAssembliesOf(typeof(AssemblyReference))
             .AddClasses(classes => classes.AssignableTo(typeof(IQueryHandler<,>)), publicOnly: false)
                 .AsImplementedInterfaces()
                 .WithScopedLifetime());
@@ -47,11 +47,11 @@ public static class DependencyInjection
         services.AddSingleton<ICreatePostMediaService, CreatePostMediaService>();
 
         return services;
-    } 
+    }
 
     private static IServiceCollection AddDomainEvents(this IServiceCollection services)
     {
-        services.Scan(scan => scan.FromAssembliesOf(typeof(DependencyInjection))
+        services.Scan(scan => scan.FromAssembliesOf(typeof(AssemblyReference))
             .AddClasses(classes => classes.AssignableTo(typeof(IDomainEventHandler<>)), publicOnly: false)
             .AsImplementedInterfaces()
             .WithScopedLifetime());

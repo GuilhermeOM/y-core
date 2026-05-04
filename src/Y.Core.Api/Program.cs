@@ -1,10 +1,11 @@
 using System.Globalization;
 using System.Text;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using Serilog;
-using Y.Core.Api.Middlewares;
+using Y.Threads.Infrastructure.Middlewares;
 
 var cultureInfo = CultureInfo.CreateSpecificCulture("en-US");
 CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
@@ -35,16 +36,22 @@ try
         .AddApplicationPart(articlesPresentationAssembly)
         .AddApplicationPart(threadsPresentationAssembly);
 
+    var authSecret = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"]!);
+
     builder.Services
         .AddAuthorization()
-        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
         .AddJwtBearer(options =>
         {
             options.RequireHttpsMetadata = false;
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"]!)),
+                IssuerSigningKey = new SymmetricSecurityKey(authSecret),
                 ValidIssuer = builder.Configuration["Jwt:Issuer"],
                 ValidAudience = builder.Configuration["Jwt:Audience"],
                 ClockSkew = TimeSpan.Zero
@@ -65,11 +72,8 @@ try
     app.UseMiddleware<LoggingCorrelationMiddleware>();
 
     app.UseHttpsRedirection();
-
     app.UseAuthentication();
-
     app.UseAuthorization();
-
     app.MapControllers();
 
     app.Run();
@@ -77,6 +81,7 @@ try
 catch (Exception ex)
 {
     Log.Fatal(ex, "An unhandled exception occurred during bootstrapping");
+    throw;
 }
 finally
 {

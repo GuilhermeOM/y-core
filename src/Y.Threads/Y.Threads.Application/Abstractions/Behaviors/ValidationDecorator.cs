@@ -21,7 +21,7 @@ internal static class ValidationDecorator
             _validators = validators;
         }
 
-        public async Task<Result> HandleAsync(TRequest request, CancellationToken cancellationToken)
+        public async Task<Result> HandleAsync(TRequest request, CancellationToken cancellationToken = default)
         {
             var validationFailures = await ValidateAsync(request, _validators);
 
@@ -48,7 +48,7 @@ internal static class ValidationDecorator
             _validators = validators;
         }
 
-        public async Task<Result<TResponse>> HandleAsync(TRequest request, CancellationToken cancellationToken)
+        public async Task<Result<TResponse>> HandleAsync(TRequest request, CancellationToken cancellationToken = default)
         {
             var validationFailures = await ValidateAsync(request, _validators);
 
@@ -75,7 +75,7 @@ internal static class ValidationDecorator
             _validators = validators;
         }
 
-        public async Task<Result<TResponse>> HandleAsync(TRequest request, CancellationToken cancellationToken)
+        public async Task<Result<TResponse>> HandleAsync(TRequest request, CancellationToken cancellationToken = default)
         {
             var validationFailures = await ValidateAsync(request, _validators);
 

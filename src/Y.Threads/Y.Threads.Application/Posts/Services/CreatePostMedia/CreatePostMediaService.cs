@@ -24,7 +24,7 @@ internal sealed class CreatePostMediaService : ICreatePostMediaService
 
     public async Task<Result<FileUploadResult[]>> UploadManyAsync(
         Guid userId,
-        ICollection<CreateMediaPost> medias,
+        IReadOnlyCollection<CreateMediaPost> medias,
         CancellationToken cancellationToken = default)
     {
         var uploadTaskPool = new List<Task<Result<FileUploadResult>>>();

@@ -37,7 +37,7 @@ internal sealed class FileInspectorService : IFileInspectorService
     }
 }
 
-public static class InspectionErrors
+internal static class InspectionErrors
 {
     public static Error UnableToDetermineMime => new("UNABLE_TO_DETERMINE_MIME", "Unable to determine file mime type");
     public static Error UnableToDetermineExtension => new("UNABLE_TO_DETERMINE_EXTENSION", "Unable to determine file extension");

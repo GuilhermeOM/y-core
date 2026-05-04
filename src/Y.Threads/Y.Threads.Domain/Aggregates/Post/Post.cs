@@ -37,7 +37,7 @@ public class Post : AggregateRoot
             return Result.Failure<Post>(PostErrors.EmptyAuthor);
         }
 
-        var isPostEmpty = (string.IsNullOrEmpty(text) || string.IsNullOrWhiteSpace(text)) && medias.Count == 0;
+        var isPostEmpty = string.IsNullOrWhiteSpace(text) && medias.Count == 0;
         if (isPostEmpty)
         {
             return Result.Failure<Post>(PostErrors.EmptyPost);
@@ -59,9 +59,43 @@ public class Post : AggregateRoot
         return Result.Success(post);
     }
 
+    public Result<Post> Reply(Author author, string text = "", IReadOnlyCollection<FileUploadResult>? medias = null)
+    {
+        medias ??= [];
+
+        if (author is null || author.Id == Guid.Empty)
+        {
+            return Result.Failure<Post>(PostErrors.EmptyAuthor);
+        }
+
+        var isReplyEmpty = string.IsNullOrWhiteSpace(text) && medias.Count == 0;
+        if (isReplyEmpty)
+        {
+            return Result.Failure<Post>(PostErrors.EmptyPost);
+        }
+
+        var reply = new Post(author.Id, text, PostStatus.Published)
+        {
+            Parent = Id
+        };
+
+        foreach (var media in medias)
+        {
+            var replyMediaResult = reply.AddMedia(media);
+            if (replyMediaResult.IsFailure)
+            {
+                return Result.Failure<Post>(replyMediaResult.Error);
+            }
+        }
+
+        reply.RaiseDomainEvent(new PostRepliedEvent(reply.Id, reply.Parent, author, reply.Text, reply.Medias));
+
+        return Result.Success(reply);
+    }
+
     public Result AddMedia(FileUploadResult media)
     {
-        if (_medias.Count > MaxAllowedMedias)
+        if (_medias.Count >= MaxAllowedMedias)
         {
             return Result.Failure(PostErrors.MaxMediaExceeded);
         }

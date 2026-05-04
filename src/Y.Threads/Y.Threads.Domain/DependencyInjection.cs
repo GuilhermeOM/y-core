@@ -10,7 +10,7 @@ public static class DependencyInjection
         return services.AddOptions(configuration);
     }
 
-    public static IServiceCollection AddOptions(this IServiceCollection services, IConfiguration configuration)
+    private static IServiceCollection AddOptions(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddOptions<BlobStorageOptions>().Bind(configuration.GetSection("Options:BlobStorage"));
 

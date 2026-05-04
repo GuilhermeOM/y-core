@@ -32,6 +32,7 @@ public class Media : Entity
 
         return Result.Success(new Media
         {
+            Id = mediaUploadResult.BlobId,
             Mime = mediaUploadResult.Mime,
             Url = mediaUploadResult.Url,
             Description = mediaUploadResult.Description
