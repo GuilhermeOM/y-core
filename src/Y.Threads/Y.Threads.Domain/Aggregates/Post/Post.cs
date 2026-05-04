@@ -95,7 +95,7 @@ public class Post : AggregateRoot
 
     public Result AddMedia(FileUploadResult media)
     {
-        if (_medias.Count > MaxAllowedMedias)
+        if (_medias.Count >= MaxAllowedMedias)
         {
             return Result.Failure(PostErrors.MaxMediaExceeded);
         }

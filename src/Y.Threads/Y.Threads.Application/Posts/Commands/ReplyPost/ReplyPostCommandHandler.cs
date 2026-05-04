@@ -68,8 +68,8 @@ internal sealed class ReplyPostCommandHandler : ICommandHandler<ReplyPostCommand
 
             await _domainEventsDispatcher.DispatchAsync(reply.Value.GetDomainEvents(), cancellationToken);
 
-            _logger.LogInformation("Reply {ReplyId} successfully created", reply.Value.Id);
-            return Result.Success(reply.Value.Id);
+            _logger.LogInformation("Reply {ReplyId} successfully created", replyId);
+            return Result.Success(replyId);
         }
         catch (Exception ex)
         {

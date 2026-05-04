@@ -90,63 +90,6 @@ public class CreatePostCommandHandlerTests
             Times.Never);
     }
 
-    //[Fact]
-    //public async Task HandleAsync_ShouldFail_WhenSomeMediaUploadFails()
-    //{
-    //    // Arrange
-    //    var command = new CreatePostCommand
-    //    {
-    //        Text = "Test content",
-    //        Medias =
-    //        [
-    //            new(_file0Mock.Object, string.Empty),
-    //            new(_file1Mock.Object, string.Empty)
-    //        ],
-    //        Author = new Author
-    //        {
-    //            Id = Guid.NewGuid()
-    //        }
-    //    };
-
-    //    var medias = command.Medias.ToList();
-    //    using var media0Stream = medias[0].Media.OpenReadStream();
-    //    using var media1Stream = medias[1].Media.OpenReadStream();
-
-    //    _storageServiceMock
-    //        .Setup(mock => mock.UploadAsync(
-    //            command.Author.Id,
-    //            media0Stream,
-    //            It.IsAny<CancellationToken>()))
-    //        .ReturnsAsync((FileUpload?)null);
-
-    //    _storageServiceMock
-    //        .Setup(mock => mock.UploadAsync(
-    //            command.Author.Id,
-    //            media1Stream,
-    //            It.IsAny<CancellationToken>()))
-    //        .ReturnsAsync(new FileUpload("", "", ""));
-
-    //    // Act
-    //    var result = await _handler.HandleAsync(command, default);
-
-    //    // Assert
-    //    result.IsFailure.Should().BeTrue();
-    //    result.Error.Should().BeEquivalentTo(PostErrors.MediaUploadFailed);
-
-    //    _storageServiceMock.Verify(
-    //        mock => mock.UploadAsync(
-    //            command.Author.Id,
-    //            It.IsAny<Stream>(),
-    //            It.IsAny<CancellationToken>()),
-    //        Times.Exactly(command.Medias.Count));
-
-    //    _storageServiceMock.Verify(
-    //        mock => mock.DeleteAsync(
-    //            command.Author.Id,
-    //            It.IsAny<FileUpload>()),
-    //        Times.Once);
-    //}
-
     [Fact]
     public async Task HandleAsync_ShouldFail_WhenAuthorIsEmpty()
     {
