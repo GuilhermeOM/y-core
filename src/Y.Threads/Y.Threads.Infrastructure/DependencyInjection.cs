@@ -19,6 +19,7 @@ using Y.Threads.Infrastructure.Background;
 using Y.Threads.Infrastructure.DomainEvents;
 using Y.Threads.Infrastructure.Messaging;
 using Y.Threads.Infrastructure.Persistence;
+using Y.Threads.Infrastructure.Persistence.Abstractions;
 using Y.Threads.Infrastructure.Persistence.Configurations.Base;
 using Y.Threads.Infrastructure.Persistence.Repositories;
 using Y.Threads.Infrastructure.Resilience;
@@ -58,7 +59,10 @@ public static class DependencyInjection
         var client = new MongoClient(connectionString);
 
         services.AddScoped(_ => new AppDataContext(client));
-        services.AddScoped<IUnitOfWork, UnitOfWork>(_ => new UnitOfWork(client));
+        services.AddScoped(_ => new UnitOfWork(client));
+
+        services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<UnitOfWork>());
+        services.AddScoped<IMongoSessionAccessor>(provider => provider.GetRequiredService<UnitOfWork>());
 
         services.Scan(scan => scan
             .FromAssembliesOf(typeof(AssemblyReference))
@@ -74,7 +78,6 @@ public static class DependencyInjection
     private static IServiceCollection AddRepositories(this IServiceCollection services)
     {
         services.AddScoped<IPostRepository, PostRepository>();
-        services.AddScoped<IPostLikeRepository, PostLikeRepository>();
         services.AddScoped<IThreadRepository, ThreadRepository>();
 
         return services;

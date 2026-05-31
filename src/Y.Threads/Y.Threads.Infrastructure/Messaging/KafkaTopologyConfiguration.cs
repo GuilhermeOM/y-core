@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Y.Threads.Domain.Constants;
 using Y.Threads.Infrastructure;
-using Y.Threads.Infrastructure.Messaging.Consumers.PostLike;
+using Y.Threads.Infrastructure.Messaging.Consumers;
 using Y.Threads.Infrastructure.Messaging.Middlewares;
 
 namespace Y.Threads.Infrastructure.Messaging;

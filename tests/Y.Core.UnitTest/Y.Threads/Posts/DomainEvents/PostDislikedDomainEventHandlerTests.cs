@@ -10,7 +10,7 @@ namespace Y.Core.UnitTest.Y.Threads.Posts.DomainEvents;
 public class PostDislikedDomainEventHandlerTests
 {
     private readonly Mock<ILogger<PostDislikedDomainEventHandler>> _loggerMock;
-    private readonly Mock<IPostLikeRepository> _postLikeRepositoryMock;
+    private readonly Mock<IPostRepository> _postRepositoryMock;
     private readonly Mock<IThreadRepository> _threadRepositoryMock;
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
 
@@ -22,7 +22,7 @@ public class PostDislikedDomainEventHandlerTests
     public PostDislikedDomainEventHandlerTests()
     {
         _loggerMock = new Mock<ILogger<PostDislikedDomainEventHandler>>();
-        _postLikeRepositoryMock = new Mock<IPostLikeRepository>();
+        _postRepositoryMock = new Mock<IPostRepository>();
         _threadRepositoryMock = new Mock<IThreadRepository>();
         _unitOfWorkMock = new Mock<IUnitOfWork>();
 
@@ -35,7 +35,7 @@ public class PostDislikedDomainEventHandlerTests
 
         _handler = new PostDislikedDomainEventHandler(
             _loggerMock.Object,
-            _postLikeRepositoryMock.Object,
+            _postRepositoryMock.Object,
             _threadRepositoryMock.Object,
             _unitOfWorkMock.Object);
     }
@@ -52,8 +52,8 @@ public class PostDislikedDomainEventHandlerTests
             .Setup(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(transactionMock.Object);
 
-        _postLikeRepositoryMock
-            .Setup(mock => mock.DeleteByPostIdUserIdAsync(
+        _postRepositoryMock
+            .Setup(mock => mock.DeletePostLikeByPostIdUserIdAsync(
                 It.IsAny<Guid>(),
                 It.IsAny<Guid>(),
                 It.IsAny<CancellationToken>()))
@@ -66,8 +66,8 @@ public class PostDislikedDomainEventHandlerTests
         _unitOfWorkMock
             .Verify(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
 
-        _postLikeRepositoryMock
-            .Verify(mock => mock.DeleteByPostIdUserIdAsync(domainEvent.PostId, domainEvent.UserId, It.IsAny<CancellationToken>()), Times.Once);
+        _postRepositoryMock
+            .Verify(mock => mock.DeletePostLikeByPostIdUserIdAsync(domainEvent.PostId, domainEvent.UserId, It.IsAny<CancellationToken>()), Times.Once);
 
         _threadRepositoryMock
             .Verify(mock => mock.DecrementLikeAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -88,8 +88,8 @@ public class PostDislikedDomainEventHandlerTests
             .Setup(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(transactionMock.Object);
 
-        _postLikeRepositoryMock
-            .Setup(mock => mock.DeleteByPostIdUserIdAsync(
+        _postRepositoryMock
+            .Setup(mock => mock.DeletePostLikeByPostIdUserIdAsync(
                 It.IsAny<Guid>(),
                 It.IsAny<Guid>(),
                 It.IsAny<CancellationToken>()))
@@ -106,8 +106,8 @@ public class PostDislikedDomainEventHandlerTests
         _unitOfWorkMock
             .Verify(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
 
-        _postLikeRepositoryMock
-            .Verify(mock => mock.DeleteByPostIdUserIdAsync(domainEvent.PostId, domainEvent.UserId, It.IsAny<CancellationToken>()), Times.Once);
+        _postRepositoryMock
+            .Verify(mock => mock.DeletePostLikeByPostIdUserIdAsync(domainEvent.PostId, domainEvent.UserId, It.IsAny<CancellationToken>()), Times.Once);
 
         _threadRepositoryMock
             .Verify(mock => mock.DecrementLikeAsync(domainEvent.PostId, It.IsAny<CancellationToken>()), Times.Once);

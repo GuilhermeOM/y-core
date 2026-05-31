@@ -6,7 +6,8 @@ namespace Y.Threads.Application.Threads.Models;
 
 public sealed class Thread : Entity
 {
-    public Author Author { get; init; } = null!;
+    public Guid CorrelationId { get; init; }
+    public AuthorSnapshot Author { get; init; } = null!;
     public string Text { get; init; } = string.Empty;
     public IReadOnlyCollection<MediaSnapshot> Medias { get; init; } = [];
     public long Depth { get; init; }
@@ -17,22 +18,13 @@ public sealed class Thread : Entity
         Guid postId,
         Author author,
         string text,
-        IReadOnlyCollection<MediaSnapshot> medias,
+        IReadOnlyCollection<Media> medias,
         long depth = 0)
     {
         Id = postId;
-        Author = author;
+        Author = new AuthorSnapshot(author);
         Text = text;
-        Medias = medias;
+        Medias = [.. medias.Select(media => new MediaSnapshot(media))];
         Depth = depth;
     }
-}
-
-public sealed class MediaSnapshot
-{
-    public Guid MediaId { get; set; }
-    public string Url { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public string Mime { get; set; } = string.Empty;
-    public MediaType Type { get; set; }
 }

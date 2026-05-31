@@ -16,17 +16,20 @@ internal sealed class ReplyPostCommandHandler : ICommandHandler<ReplyPostCommand
 
     private readonly ILogger<ReplyPostCommandHandler> _logger;
     private readonly IPostRepository _postRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ICreatePostMediaService _createPostMediaService;
     private readonly IDomainEventsDispatcher _domainEventsDispatcher;
 
     public ReplyPostCommandHandler(
         ILogger<ReplyPostCommandHandler> logger,
         IPostRepository postRepository,
+        IUnitOfWork unitOfWork,
         ICreatePostMediaService createPostMediaService,
         IDomainEventsDispatcher domainEventsDispatcher)
     {
         _logger = logger;
         _postRepository = postRepository;
+        _unitOfWork = unitOfWork;
         _createPostMediaService = createPostMediaService;
         _domainEventsDispatcher = domainEventsDispatcher;
     }
@@ -59,6 +62,8 @@ internal sealed class ReplyPostCommandHandler : ICommandHandler<ReplyPostCommand
                 return Result.Failure<Guid>(reply.Error);
             }
 
+            await using var transaction = await _unitOfWork.BeginTransactionAsync(cancellationToken);
+
             var replyId = await _postRepository.CreateAsync(reply.Value, cancellationToken);
             if (replyId == Guid.Empty)
             {
@@ -66,6 +71,7 @@ internal sealed class ReplyPostCommandHandler : ICommandHandler<ReplyPostCommand
                 return Result.Failure<Guid>(PostErrors.PostReplyCreationFailed);
             }
 
+            await transaction.CommitAsync(cancellationToken);
             await _domainEventsDispatcher.DispatchAsync(reply.Value.GetDomainEvents(), cancellationToken);
 
             _logger.LogInformation("Reply {ReplyId} successfully created", replyId);

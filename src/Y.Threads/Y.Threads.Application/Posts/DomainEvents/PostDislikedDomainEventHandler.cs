@@ -8,18 +8,18 @@ namespace Y.Threads.Application.Posts.DomainEvents;
 internal sealed class PostDislikedDomainEventHandler : IDomainEventHandler<PostDislikedEvent>
 {
     private readonly ILogger<PostDislikedDomainEventHandler> _logger;
-    private readonly IPostLikeRepository _postLikeRepository;
+    private readonly IPostRepository _postRepository;
     private readonly IThreadRepository _threadRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public PostDislikedDomainEventHandler(
         ILogger<PostDislikedDomainEventHandler> logger,
-        IPostLikeRepository postLikeRepository,
+        IPostRepository postRepository,
         IThreadRepository threadRepository,
         IUnitOfWork unitOfWork)
     {
         _logger = logger;
-        _postLikeRepository = postLikeRepository;
+        _postRepository = postRepository;
         _threadRepository = threadRepository;
         _unitOfWork = unitOfWork;
     }
@@ -28,8 +28,8 @@ internal sealed class PostDislikedDomainEventHandler : IDomainEventHandler<PostD
     {
         await using var transaction = await _unitOfWork.BeginTransactionAsync(cancellationToken);
 
-        var deleteAmount = await _postLikeRepository
-            .DeleteByPostIdUserIdAsync(domainEvent.PostId, domainEvent.UserId, cancellationToken);
+        var deleteAmount = await _postRepository
+            .DeletePostLikeByPostIdUserIdAsync(domainEvent.PostId, domainEvent.UserId, cancellationToken);
 
         if (deleteAmount == 0)
         {
@@ -38,7 +38,6 @@ internal sealed class PostDislikedDomainEventHandler : IDomainEventHandler<PostD
         }
 
         await _threadRepository.DecrementLikeAsync(domainEvent.PostId, cancellationToken);
-
         await transaction.CommitAsync(cancellationToken);
     }
 }

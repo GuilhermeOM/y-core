@@ -1,5 +1,4 @@
-﻿
-namespace Y.Threads.Domain.Repositories;
+﻿namespace Y.Threads.Domain.Repositories;
 
 public interface IUnitOfWork
 {

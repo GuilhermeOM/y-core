@@ -6,11 +6,21 @@ internal sealed class ThreadConfiguration : ICollectionConfiguration<Application
 {
     public async Task ConfigureAsync(IMongoCollection<Application.Threads.Models.Thread> collection, CancellationToken cancellationToken = default)
     {
-        var authorIdIndex = Builders<Application.Threads.Models.Thread>.IndexKeys.Ascending(thread => thread.Author.Id);
+        var authorIdIndex = Builders<Application.Threads.Models.Thread>.IndexKeys
+            .Ascending(thread => thread.Author.Id);
+
+        var correlationIdIndex = Builders<Application.Threads.Models.Thread>.IndexKeys
+            .Ascending(thread => thread.CorrelationId);
+
+        var correlationIdAndDepthIndex = Builders<Application.Threads.Models.Thread>.IndexKeys
+            .Ascending(thread => thread.CorrelationId)
+            .Ascending(thread => thread.Depth);
 
         await collection.Indexes.CreateManyAsync(
         [
-            new CreateIndexModel<Application.Threads.Models.Thread>(authorIdIndex)
+            new CreateIndexModel<Application.Threads.Models.Thread>(authorIdIndex),
+            new CreateIndexModel<Application.Threads.Models.Thread>(correlationIdIndex),
+            new CreateIndexModel<Application.Threads.Models.Thread>(correlationIdAndDepthIndex)
         ], cancellationToken);
     }
 }
