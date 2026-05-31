@@ -15,17 +15,20 @@ internal sealed class CreatePostCommandHandler : ICommandHandler<CreatePostComma
 
     private readonly ILogger<CreatePostCommandHandler> _logger;
     private readonly IPostRepository _postRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IDomainEventsDispatcher _domainEventsDispatcher;
     private readonly ICreatePostMediaService _createPostMediaService;
 
     public CreatePostCommandHandler(
         ILogger<CreatePostCommandHandler> logger,
         IPostRepository postRepository,
+        IUnitOfWork unitOfWork,
         IDomainEventsDispatcher domainEventsDispatcher,
         ICreatePostMediaService createPostMediaService)
     {
         _logger = logger;
         _postRepository = postRepository;
+        _unitOfWork = unitOfWork;
         _domainEventsDispatcher = domainEventsDispatcher;
         _createPostMediaService = createPostMediaService;
     }
@@ -51,6 +54,8 @@ internal sealed class CreatePostCommandHandler : ICommandHandler<CreatePostComma
                 return Result.Failure<Guid>(postCreationResult.Error);
             }
 
+            await using var transaction = await _unitOfWork.BeginTransactionAsync(cancellationToken);
+
             var postId = await _postRepository.CreateAsync(postCreationResult.Value, cancellationToken);
             if (postId == Guid.Empty)
             {
@@ -58,6 +63,7 @@ internal sealed class CreatePostCommandHandler : ICommandHandler<CreatePostComma
                 return Result.Failure<Guid>(PostErrors.PostCreationFailed);
             }
 
+            await transaction.CommitAsync(cancellationToken);
             await _domainEventsDispatcher.DispatchAsync(postCreationResult.Value.GetDomainEvents(), cancellationToken);
 
             _logger.LogInformation("Post {PostId} successfully created", postId);

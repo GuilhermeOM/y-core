@@ -8,7 +8,7 @@ using Y.Core.SharedKernel.Models;
 using Y.Threads.Domain.Aggregates.Post;
 using Y.Threads.Domain.Events;
 using Y.Threads.Domain.Repositories;
-using Y.Threads.Infrastructure.Messaging.Consumers.PostLike;
+using Y.Threads.Infrastructure.Messaging.Consumers;
 
 namespace Y.Core.UnitTest.Y.Threads.Consumers;
 

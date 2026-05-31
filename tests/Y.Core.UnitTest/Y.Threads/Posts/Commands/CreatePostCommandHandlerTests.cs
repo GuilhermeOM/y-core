@@ -18,6 +18,7 @@ public class CreatePostCommandHandlerTests
 {
     private readonly Mock<ILogger<CreatePostCommandHandler>> _loggerMock;
     private readonly Mock<IPostRepository> _postRepositoryMock;
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IDomainEventsDispatcher> _domainEventsDispatcherMock;
     private readonly Mock<ICreatePostMediaService> _createPostMediaServiceMock;
 
@@ -30,6 +31,7 @@ public class CreatePostCommandHandlerTests
     {
         _loggerMock = new Mock<ILogger<CreatePostCommandHandler>>();
         _postRepositoryMock = new Mock<IPostRepository>();
+        _unitOfWorkMock = new Mock<IUnitOfWork>();
         _domainEventsDispatcherMock = new Mock<IDomainEventsDispatcher>();
         _createPostMediaServiceMock = new Mock<ICreatePostMediaService>();
 
@@ -39,6 +41,7 @@ public class CreatePostCommandHandlerTests
         _handler = new CreatePostCommandHandler(
             _loggerMock.Object,
             _postRepositoryMock.Object,
+            _unitOfWorkMock.Object,
             _domainEventsDispatcherMock.Object,
             _createPostMediaServiceMock.Object);
     }
@@ -76,6 +79,9 @@ public class CreatePostCommandHandlerTests
         // Assert
         result.IsFailure.Should().BeTrue();
         result.Error.Should().BeEquivalentTo(expectedFailure.Error);
+
+        _unitOfWorkMock
+            .Verify(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Never);
 
         _postRepositoryMock.Verify(
             mock => mock.CreateAsync(
@@ -118,6 +124,9 @@ public class CreatePostCommandHandlerTests
         // Assert
         result.IsFailure.Should().BeTrue();
         result.Error.Should().BeEquivalentTo(PostErrors.EmptyAuthor);
+
+        _unitOfWorkMock
+            .Verify(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Never);
 
         _postRepositoryMock.Verify(
             mock => mock.CreateAsync(
@@ -164,6 +173,9 @@ public class CreatePostCommandHandlerTests
 
         _createPostMediaServiceMock
             .Verify(mock => mock.RollbackAsync(uploadedMedias), Times.Once);
+
+        _unitOfWorkMock
+            .Verify(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Never);
 
         _postRepositoryMock.Verify(
             mock => mock.CreateAsync(
@@ -227,6 +239,9 @@ public class CreatePostCommandHandlerTests
         _createPostMediaServiceMock
             .Verify(mock => mock.RollbackAsync(uploadedMedias), Times.Once);
 
+        _unitOfWorkMock
+            .Verify(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Never);
+
         _postRepositoryMock.Verify(
             mock => mock.CreateAsync(
                 It.IsAny<Post>(),
@@ -281,6 +296,9 @@ public class CreatePostCommandHandlerTests
         _createPostMediaServiceMock
             .Verify(mock => mock.RollbackAsync(uploadedMedias), Times.Once);
 
+        _unitOfWorkMock
+            .Verify(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Never);
+
         _postRepositoryMock.Verify(
             mock => mock.CreateAsync(
                 It.IsAny<Post>(),
@@ -318,6 +336,12 @@ public class CreatePostCommandHandlerTests
             new(Guid.NewGuid(), "http://dummy.com", "path/", "image/jpeg", "")
         };
 
+        var transactionMock = new Mock<ITransactionScope>();
+
+        _unitOfWorkMock
+            .Setup(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactionMock.Object);
+
         _createPostMediaServiceMock
             .Setup(mock => mock.UploadManyAsync(
                 command.Author.Id,
@@ -342,6 +366,11 @@ public class CreatePostCommandHandlerTests
         // Assert
         result.IsFailure.Should().BeTrue();
         result.Error.Should().BeEquivalentTo(PostErrors.PostCreationFailed);
+
+        _unitOfWorkMock
+            .Verify(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+
+        transactionMock.Verify(mock => mock.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);
 
         _createPostMediaServiceMock
             .Verify(mock => mock.RollbackAsync(uploadedMedias), Times.Once);
@@ -384,6 +413,12 @@ public class CreatePostCommandHandlerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(uploadedMedias));
 
+        var transactionMock = new Mock<ITransactionScope>();
+
+        _unitOfWorkMock
+            .Setup(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactionMock.Object);
+
         var postResultMock = Post.Create(command.Author, command.Text, uploadedMedias);
 
         _postRepositoryMock
@@ -410,6 +445,11 @@ public class CreatePostCommandHandlerTests
 
         _createPostMediaServiceMock
             .Verify(mock => mock.RollbackAsync(It.IsAny<IReadOnlyCollection<FileUploadResult>>()), Times.Never);
+
+        _unitOfWorkMock
+            .Verify(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+
+        transactionMock.Verify(mock => mock.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
 
         _postRepositoryMock
             .Verify(mock => mock.CreateAsync(
@@ -448,6 +488,12 @@ public class CreatePostCommandHandlerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(uploadedMedias));
 
+        var transactionMock = new Mock<ITransactionScope>();
+
+        _unitOfWorkMock
+            .Setup(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactionMock.Object);
+
         var postResultMock = Post.Create(command.Author, command.Text, uploadedMedias);
 
         _postRepositoryMock
@@ -474,6 +520,11 @@ public class CreatePostCommandHandlerTests
 
         _createPostMediaServiceMock
             .Verify(mock => mock.RollbackAsync(It.IsAny<IReadOnlyCollection<FileUploadResult>>()), Times.Never);
+
+        _unitOfWorkMock
+            .Verify(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+
+        transactionMock.Verify(mock => mock.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
 
         _postRepositoryMock
             .Verify(mock => mock.CreateAsync(
@@ -520,6 +571,12 @@ public class CreatePostCommandHandlerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(uploadedMedias));
 
+        var transactionMock = new Mock<ITransactionScope>();
+
+        _unitOfWorkMock
+            .Setup(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactionMock.Object);
+
         var postResultMock = Post.Create(command.Author, command.Text, uploadedMedias);
 
         _postRepositoryMock
@@ -546,6 +603,11 @@ public class CreatePostCommandHandlerTests
 
         _createPostMediaServiceMock
             .Verify(mock => mock.RollbackAsync(It.IsAny<IReadOnlyCollection<FileUploadResult>>()), Times.Never);
+
+        _unitOfWorkMock
+            .Verify(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+
+        transactionMock.Verify(mock => mock.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
 
         _postRepositoryMock
             .Verify(mock => mock.CreateAsync(

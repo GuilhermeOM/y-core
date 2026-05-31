@@ -6,6 +6,7 @@ using Y.Threads.Application.Threads.Abstractions;
 using Y.Threads.Application.Threads.Models;
 using Y.Threads.Domain.Aggregates.Post;
 using Y.Threads.Domain.Events;
+using Y.Threads.Domain.Repositories;
 using Y.Threads.Domain.ValueObjects;
 
 using ThreadModel = Y.Threads.Application.Threads.Models.Thread;
@@ -15,14 +16,16 @@ namespace Y.Core.UnitTest.Y.Threads.Posts.DomainEvents;
 public class PostRepliedDomainEventHandlerTests
 {
     private readonly Mock<IThreadRepository> _threadRepositoryMock;
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
 
     private readonly PostRepliedDomainEventHandler _handler;
 
     public PostRepliedDomainEventHandlerTests()
     {
         _threadRepositoryMock = new Mock<IThreadRepository>();
+        _unitOfWorkMock = new Mock<IUnitOfWork>();
 
-        _handler = new PostRepliedDomainEventHandler(_threadRepositoryMock.Object);
+        _handler = new PostRepliedDomainEventHandler(_threadRepositoryMock.Object, _unitOfWorkMock.Object);
     }
 
     [Fact]
@@ -43,6 +46,8 @@ public class PostRepliedDomainEventHandlerTests
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => _handler.HandleAsync(domainEvent, default));
+
+        _unitOfWorkMock.Verify(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Never);
 
         _threadRepositoryMock
             .Verify(mock => mock.CreateAsync(It.IsAny<ThreadModel>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -70,6 +75,12 @@ public class PostRepliedDomainEventHandlerTests
             .Setup(mock => mock.GetByIdAsync(domainEvent.Parent, It.IsAny<CancellationToken>()))
             .ReturnsAsync(parentThread);
 
+        var transactionMock = new Mock<ITransactionScope>();
+
+        _unitOfWorkMock
+            .Setup(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactionMock.Object);
+
         _threadRepositoryMock
             .Setup(mock => mock.CreateAsync(
                 It.Is<ThreadModel>(t =>
@@ -85,6 +96,10 @@ public class PostRepliedDomainEventHandlerTests
         await _handler.HandleAsync(domainEvent, default);
 
         // Assert
+        _unitOfWorkMock.Verify(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+
+        transactionMock.Verify(mock => mock.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
+
         _threadRepositoryMock.Verify(
             mock => mock.CreateAsync(
                 It.Is<ThreadModel>(t =>
@@ -126,6 +141,12 @@ public class PostRepliedDomainEventHandlerTests
             .Setup(mock => mock.GetByIdAsync(domainEvent.Parent, It.IsAny<CancellationToken>()))
             .ReturnsAsync(parentThread);
 
+        var transactionMock = new Mock<ITransactionScope>();
+
+        _unitOfWorkMock
+            .Setup(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactionMock.Object);
+
         _threadRepositoryMock
             .Setup(mock => mock.CreateAsync(
                 It.Is<ThreadModel>(t =>
@@ -141,6 +162,10 @@ public class PostRepliedDomainEventHandlerTests
         await _handler.HandleAsync(domainEvent, default);
 
         // Assert
+        _unitOfWorkMock.Verify(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+
+        transactionMock.Verify(mock => mock.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
+
         _threadRepositoryMock.Verify(
             mock => mock.CreateAsync(
                 It.Is<ThreadModel>(t =>
@@ -183,6 +208,12 @@ public class PostRepliedDomainEventHandlerTests
             .Setup(mock => mock.GetByIdAsync(domainEvent.Parent, It.IsAny<CancellationToken>()))
             .ReturnsAsync(parentThread);
 
+        var transactionMock = new Mock<ITransactionScope>();
+
+        _unitOfWorkMock
+            .Setup(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactionMock.Object);
+
         _threadRepositoryMock
             .Setup(mock => mock.CreateAsync(
                 It.Is<ThreadModel>(t =>
@@ -198,6 +229,10 @@ public class PostRepliedDomainEventHandlerTests
         await _handler.HandleAsync(domainEvent, default);
 
         // Assert
+        _unitOfWorkMock.Verify(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+
+        transactionMock.Verify(mock => mock.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
+
         _threadRepositoryMock.Verify(
             mock => mock.CreateAsync(
                 It.Is<ThreadModel>(t =>
@@ -245,6 +280,12 @@ public class PostRepliedDomainEventHandlerTests
             .Setup(mock => mock.GetByIdAsync(domainEvent.Parent, It.IsAny<CancellationToken>()))
             .ReturnsAsync(parentThread);
 
+        var transactionMock = new Mock<ITransactionScope>();
+
+        _unitOfWorkMock
+            .Setup(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactionMock.Object);
+
         _threadRepositoryMock
             .Setup(mock => mock.CreateAsync(
                 It.Is<ThreadModel>(t =>
@@ -261,6 +302,10 @@ public class PostRepliedDomainEventHandlerTests
         await _handler.HandleAsync(domainEvent, default);
 
         // Assert
+        _unitOfWorkMock.Verify(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+
+        transactionMock.Verify(mock => mock.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
+
         _threadRepositoryMock.Verify(
             mock => mock.CreateAsync(
                 It.Is<ThreadModel>(t =>

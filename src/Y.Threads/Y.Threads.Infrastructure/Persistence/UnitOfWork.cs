@@ -1,8 +1,10 @@
-﻿using MongoDB.Driver;
+﻿using Confluent.Kafka;
+using MongoDB.Driver;
 using Y.Threads.Domain.Repositories;
+using Y.Threads.Infrastructure.Persistence.Abstractions;
 
 namespace Y.Threads.Infrastructure.Persistence;
-internal sealed class UnitOfWork : IUnitOfWork
+internal sealed class UnitOfWork : IUnitOfWork, IMongoSessionAccessor
 {
     private readonly IMongoClient _mongoClient;
 
@@ -11,42 +13,48 @@ internal sealed class UnitOfWork : IUnitOfWork
         _mongoClient = mongoClient;
     }
 
+    public IClientSessionHandle? ClientSessionHandle { get; private set; }
+
     public async Task<ITransactionScope> BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
-        return await TransactionScope.CreateAsync(_mongoClient, cancellationToken);
+        ClientSessionHandle = await _mongoClient.StartSessionAsync(cancellationToken: cancellationToken);
+        ClientSessionHandle.StartTransaction();
+
+        return new TransactionScope(ClientSessionHandle!, () => ClientSessionHandle = null);
     }
 }
 
 internal sealed class TransactionScope : ITransactionScope
 {
-    private readonly IClientSessionHandle _session;
+    private readonly IClientSessionHandle _clientSessionHandle;
+    private readonly Action _clearSessionAction;
     private bool _committed;
 
-    private TransactionScope(IClientSessionHandle session)
+    internal TransactionScope(IClientSessionHandle clientSessionHandle, Action clearSessionAction)
     {
-        _session = session;
-    }
-
-    internal static async Task<TransactionScope> CreateAsync(IMongoClient client, CancellationToken cancellationToken = default)
-    {
-        var session = await client.StartSessionAsync(cancellationToken: cancellationToken);
-        session.StartTransaction();
-
-        return new TransactionScope(session);
+        _clientSessionHandle = clientSessionHandle;
+        _clearSessionAction = clearSessionAction;
     }
 
     public async Task CommitAsync(CancellationToken cancellationToken = default)
     {
-        await _session.CommitTransactionAsync(cancellationToken);
+        await _clientSessionHandle.CommitTransactionAsync(cancellationToken);
         _committed = true;
     }
 
     public async ValueTask DisposeAsync()
     {
-        if (!_committed)
+        try
         {
-            await _session.AbortTransactionAsync();
+            if (!_committed)
+            {
+                await _clientSessionHandle.AbortTransactionAsync();
+            }
         }
-        _session.Dispose();
+        finally
+        {
+            _clientSessionHandle.Dispose();
+            _clearSessionAction();
+        }
     }
 }

@@ -1,5 +1,4 @@
-﻿
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using Moq;
 using Y.Threads.Application.Posts.DomainEvents;
@@ -13,7 +12,7 @@ namespace Y.Core.UnitTest.Y.Threads.Posts.DomainEvents;
 public class PostLikedDomainEventHandlerTests
 {
     private readonly Mock<ILogger<PostLikedDomainEventHandler>> _loggerMock;
-    private readonly Mock<IPostLikeRepository> _postLikeRepositoryMock;
+    private readonly Mock<IPostRepository> _postRepositoryMock;
     private readonly Mock<IThreadRepository> _threadRepositoryMock;
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
 
@@ -25,7 +24,7 @@ public class PostLikedDomainEventHandlerTests
     public PostLikedDomainEventHandlerTests()
     {
         _loggerMock = new Mock<ILogger<PostLikedDomainEventHandler>>();
-        _postLikeRepositoryMock = new Mock<IPostLikeRepository>();
+        _postRepositoryMock = new Mock<IPostRepository>();
         _threadRepositoryMock = new Mock<IThreadRepository>();
         _unitOfWorkMock = new Mock<IUnitOfWork>();
 
@@ -38,7 +37,7 @@ public class PostLikedDomainEventHandlerTests
 
         _handler = new PostLikedDomainEventHandler(
             _loggerMock.Object,
-            _postLikeRepositoryMock.Object,
+            _postRepositoryMock.Object,
             _threadRepositoryMock.Object,
             _unitOfWorkMock.Object);
     }
@@ -56,8 +55,8 @@ public class PostLikedDomainEventHandlerTests
         _unitOfWorkMock
             .Verify(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Never);
 
-        _postLikeRepositoryMock
-            .Verify(mock => mock.TryCreateAsync(It.IsAny<PostLike>(), It.IsAny<CancellationToken>()), Times.Never);
+        _postRepositoryMock
+            .Verify(mock => mock.TryCreatePostLikeAsync(It.IsAny<PostLike>(), It.IsAny<CancellationToken>()), Times.Never);
 
         _threadRepositoryMock
             .Verify(mock => mock.IncrementLikeAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -76,8 +75,8 @@ public class PostLikedDomainEventHandlerTests
         _unitOfWorkMock
             .Verify(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Never);
 
-        _postLikeRepositoryMock
-            .Verify(mock => mock.TryCreateAsync(It.IsAny<PostLike>(), It.IsAny<CancellationToken>()), Times.Never);
+        _postRepositoryMock
+            .Verify(mock => mock.TryCreatePostLikeAsync(It.IsAny<PostLike>(), It.IsAny<CancellationToken>()), Times.Never);
 
         _threadRepositoryMock
             .Verify(mock => mock.IncrementLikeAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -95,8 +94,8 @@ public class PostLikedDomainEventHandlerTests
             .Setup(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(transactionMock.Object);
 
-        _postLikeRepositoryMock
-            .Setup(mock => mock.TryCreateAsync(
+        _postRepositoryMock
+            .Setup(mock => mock.TryCreatePostLikeAsync(
                 It.Is<PostLike>(x => x.UserId == domainEvent.UserId
                     && x.PostId == domainEvent.PostId),
                 It.IsAny<CancellationToken>()))
@@ -109,8 +108,8 @@ public class PostLikedDomainEventHandlerTests
         _unitOfWorkMock
             .Verify(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
 
-        _postLikeRepositoryMock
-            .Verify(mock => mock.TryCreateAsync(
+        _postRepositoryMock
+            .Verify(mock => mock.TryCreatePostLikeAsync(
                 It.Is<PostLike>(x => x.UserId == domainEvent.UserId
                     && x.PostId == domainEvent.PostId),
                 It.IsAny<CancellationToken>()), Times.Once);
@@ -134,8 +133,8 @@ public class PostLikedDomainEventHandlerTests
             .Setup(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(transactionMock.Object);
 
-        _postLikeRepositoryMock
-            .Setup(mock => mock.TryCreateAsync(
+        _postRepositoryMock
+            .Setup(mock => mock.TryCreatePostLikeAsync(
                 It.Is<PostLike>(x => x.UserId == domainEvent.UserId
                     && x.PostId == domainEvent.PostId),
                 It.IsAny<CancellationToken>()))
@@ -152,8 +151,8 @@ public class PostLikedDomainEventHandlerTests
         _unitOfWorkMock
             .Verify(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
 
-        _postLikeRepositoryMock
-            .Verify(mock => mock.TryCreateAsync(
+        _postRepositoryMock
+            .Verify(mock => mock.TryCreatePostLikeAsync(
                 It.Is<PostLike>(x => x.UserId == domainEvent.UserId
                     && x.PostId == domainEvent.PostId),
                 It.IsAny<CancellationToken>()), Times.Once);

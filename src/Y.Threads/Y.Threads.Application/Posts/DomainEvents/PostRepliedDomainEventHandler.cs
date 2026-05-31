@@ -9,10 +9,12 @@ namespace Y.Threads.Application.Posts.DomainEvents;
 internal sealed class PostRepliedDomainEventHandler : IDomainEventHandler<PostRepliedEvent>
 {
     private readonly IThreadRepository _threadRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public PostRepliedDomainEventHandler(IThreadRepository threadRepository)
+    public PostRepliedDomainEventHandler(IThreadRepository threadRepository, IUnitOfWork unitOfWork)
     {
         _threadRepository = threadRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task HandleAsync(PostRepliedEvent domainEvent, CancellationToken cancellationToken = default)
@@ -24,9 +26,17 @@ internal sealed class PostRepliedDomainEventHandler : IDomainEventHandler<PostRe
             domainEvent.PostId,
             domainEvent.Author,
             domainEvent.Text,
-            [.. domainEvent.Medias.Select(PostCreatedDomainEventHandler.ToMediaSnapshot)],
-            parent.Depth + 1);
+            domainEvent.Medias,
+            parent.Depth + 1)
+        {
+            CorrelationId = parent.CorrelationId
+        };
 
+        await using var transaction = await _unitOfWork.BeginTransactionAsync(cancellationToken);
+
+        await _threadRepository.IncrementReplyAsync(parent.Id, cancellationToken);
         await _threadRepository.CreateAsync(subThread, cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
     }
 }

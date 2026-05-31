@@ -10,18 +10,18 @@ namespace Y.Threads.Application.Posts.DomainEvents;
 internal sealed class PostLikedDomainEventHandler : IDomainEventHandler<PostLikedEvent>
 {
     private readonly ILogger<PostLikedDomainEventHandler> _logger;
-    private readonly IPostLikeRepository _postLikeRepository;
+    private readonly IPostRepository _postRepository;
     private readonly IThreadRepository _threadRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public PostLikedDomainEventHandler(
         ILogger<PostLikedDomainEventHandler> logger,
-        IPostLikeRepository postLikeRepository,
+        IPostRepository postRepository,
         IThreadRepository threadRepository,
         IUnitOfWork unitOfWork)
     {
         _logger = logger;
-        _postLikeRepository = postLikeRepository;
+        _postRepository = postRepository;
         _threadRepository = threadRepository;
         _unitOfWork = unitOfWork;
     }
@@ -39,7 +39,7 @@ internal sealed class PostLikedDomainEventHandler : IDomainEventHandler<PostLike
 
         try
         {
-            await _postLikeRepository.TryCreateAsync(postLikeResult.Value, cancellationToken);
+            await _postRepository.TryCreatePostLikeAsync(postLikeResult.Value, cancellationToken);
             await _threadRepository.IncrementLikeAsync(domainEvent.PostId, cancellationToken);
 
             await transaction.CommitAsync(cancellationToken);

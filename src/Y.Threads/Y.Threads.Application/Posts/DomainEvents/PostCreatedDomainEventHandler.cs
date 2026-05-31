@@ -3,15 +3,18 @@ using Y.Threads.Application.Threads.Abstractions;
 using Y.Threads.Application.Threads.Models;
 using Y.Threads.Domain.Aggregates.Post;
 using Y.Threads.Domain.Events;
+using Y.Threads.Domain.Repositories;
 
 namespace Y.Threads.Application.Posts.DomainEvents;
 internal sealed class PostCreatedDomainEventHandler : IDomainEventHandler<PostCreatedEvent>
 {
     private readonly IThreadRepository _threadRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public PostCreatedDomainEventHandler(IThreadRepository threadRepository)
+    public PostCreatedDomainEventHandler(IThreadRepository threadRepository, IUnitOfWork unitOfWork)
     {
         _threadRepository = threadRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task HandleAsync(PostCreatedEvent domainEvent, CancellationToken cancellationToken = default)
@@ -20,20 +23,14 @@ internal sealed class PostCreatedDomainEventHandler : IDomainEventHandler<PostCr
             domainEvent.PostId,
             domainEvent.Author,
             domainEvent.Text,
-            [.. domainEvent.Medias.Select(ToMediaSnapshot)]);
+            domainEvent.Medias)
+        {
+            CorrelationId = domainEvent.PostId
+        };
+
+        await using var transaction = await _unitOfWork.BeginTransactionAsync(cancellationToken);
 
         await _threadRepository.CreateAsync(thread, cancellationToken);
-    }
-
-    public static MediaSnapshot ToMediaSnapshot(Media media)
-    {
-        return new MediaSnapshot
-        {
-            MediaId = media.Id,
-            Url = media.Url,
-            Description = media.Description,
-            Mime = media.Mime,
-            Type = Media.GetMediaTypeByMime(media.Mime)
-        };
+        await transaction.CommitAsync(cancellationToken);
     }
 }
