@@ -1,5 +1,7 @@
 ﻿using MongoDB.Driver;
 using Y.Threads.Application.Threads.Abstractions;
+using Y.Threads.Application.Threads.Models;
+using Y.Threads.Application.Threads.Queries.GetThreadById;
 using Y.Threads.Infrastructure.Persistence.Abstractions;
 
 namespace Y.Threads.Infrastructure.Persistence.Repositories;
@@ -22,7 +24,7 @@ internal sealed class ThreadRepository : IThreadRepository
         return await cursor.FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<Application.Threads.Models.Thread>> GetByIdAndMaxDepthAsync(Guid id, int maxDepth, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<GetThreadByIdQueryResponse>> GetByIdAndMaxDepthAsync(Guid id, int maxDepth, CancellationToken cancellationToken = default)
     {
         var filter = Builders<Application.Threads.Models.Thread>.Filter.Empty;
 
@@ -33,8 +35,20 @@ internal sealed class ThreadRepository : IThreadRepository
             .Ascending(thread => thread.Depth)
             .Ascending(thread => thread.CreatedAt);
 
+        var projection = Builders<Application.Threads.Models.Thread>.Projection.Expression(thread => new GetThreadByIdQueryResponse(
+            thread.Id,
+            thread.Author,
+            thread.Text,
+            thread.Medias,
+            thread.Depth,
+            thread.LikeAmount,
+            thread.ReplyAmount,
+            thread.CreatedAt
+        ));
+
         return await _context.Threads
             .Find(filter)
+            .Project(projection)
             .Sort(sort)
             .ToListAsync(cancellationToken);
     }

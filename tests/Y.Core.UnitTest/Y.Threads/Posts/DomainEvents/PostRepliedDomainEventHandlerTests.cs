@@ -50,6 +50,9 @@ public class PostRepliedDomainEventHandlerTests
         _unitOfWorkMock.Verify(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Never);
 
         _threadRepositoryMock
+            .Verify(mock => mock.IncrementReplyAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+
+        _threadRepositoryMock
             .Verify(mock => mock.CreateAsync(It.IsAny<ThreadModel>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -99,6 +102,9 @@ public class PostRepliedDomainEventHandlerTests
         _unitOfWorkMock.Verify(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
 
         transactionMock.Verify(mock => mock.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
+
+        _threadRepositoryMock
+            .Verify(mock => mock.IncrementReplyAsync(domainEvent.Parent, It.IsAny<CancellationToken>()), Times.Once);
 
         _threadRepositoryMock.Verify(
             mock => mock.CreateAsync(
@@ -166,6 +172,9 @@ public class PostRepliedDomainEventHandlerTests
 
         transactionMock.Verify(mock => mock.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
 
+        _threadRepositoryMock
+            .Verify(mock => mock.IncrementReplyAsync(domainEvent.Parent, It.IsAny<CancellationToken>()), Times.Once);
+
         _threadRepositoryMock.Verify(
             mock => mock.CreateAsync(
                 It.Is<ThreadModel>(t =>
@@ -232,6 +241,9 @@ public class PostRepliedDomainEventHandlerTests
         _unitOfWorkMock.Verify(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
 
         transactionMock.Verify(mock => mock.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
+
+        _threadRepositoryMock
+            .Verify(mock => mock.IncrementReplyAsync(domainEvent.Parent, It.IsAny<CancellationToken>()), Times.Once);
 
         _threadRepositoryMock.Verify(
             mock => mock.CreateAsync(
@@ -305,6 +317,9 @@ public class PostRepliedDomainEventHandlerTests
         _unitOfWorkMock.Verify(mock => mock.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
 
         transactionMock.Verify(mock => mock.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
+
+        _threadRepositoryMock
+            .Verify(mock => mock.IncrementReplyAsync(domainEvent.Parent, It.IsAny<CancellationToken>()), Times.Once);
 
         _threadRepositoryMock.Verify(
             mock => mock.CreateAsync(

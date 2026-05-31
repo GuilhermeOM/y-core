@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Y.Contract.SharedKernel.Enums;
 using Y.Core.SharedKernel.Abstractions.Messaging;
@@ -15,6 +16,8 @@ namespace Y.Threads.Presentation.Posts;
 [Authorize(Roles = nameof(Role.User))]
 public sealed class PostController : ApiController
 {
+    private const string GetByIdRouteName = $"{nameof(PostController)}.{nameof(GetByIdAsync)}";
+
     private readonly IQueryHandler<GetPostByIdQuery, Post> _getPostByIdQueryHandler;
     private readonly ICommandHandler<CreatePostCommand, Guid> _createPostCommandHandler;
     private readonly ICommandHandler<LikePostCommand> _likePostCommandHandler;
@@ -35,7 +38,10 @@ public sealed class PostController : ApiController
         _replyPostCommandHandler = replyPostCommandHandler;
     }
 
-    [HttpGet("{id:guid}")]
+    [HttpGet("{id:guid}", Name = GetByIdRouteName)]
+    [ProducesResponseType(typeof(Post), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorDetailsResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorDetailsResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id, CancellationToken cancellationToken = default)
     {
         var result = await _getPostByIdQueryHandler.HandleAsync(new GetPostByIdQuery(id), cancellationToken);
@@ -43,6 +49,9 @@ public sealed class PostController : ApiController
     }
 
     [HttpPost]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ErrorDetailsResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorDetailsResponse), StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> CreateAsync(
         [FromForm] PostRequests.CreatePostRequest request,
         CancellationToken cancellationToken = default)
@@ -58,11 +67,12 @@ public sealed class PostController : ApiController
         var result = await _createPostCommandHandler.HandleAsync(command, cancellationToken);
 
         return result.IsSuccess
-            ? Created(nameof(GetByIdAsync), new { Id = result.Value })
+            ? CreatedAtRoute(GetByIdRouteName, new { Id = result.Value })
             : HandleFailure(result);
     }
 
     [HttpPost("{postId:guid}/like")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> LikeAsync(
         [FromRoute] Guid postId,
         CancellationToken cancellationToken = default)
@@ -81,6 +91,7 @@ public sealed class PostController : ApiController
     }
 
     [HttpPost("{postId:guid}/dislike")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> DislikeAsync(
         [FromRoute] Guid postId,
         CancellationToken cancellationToken = default)
@@ -99,6 +110,9 @@ public sealed class PostController : ApiController
     }
 
     [HttpPost("{postId:guid}/reply")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ErrorDetailsResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorDetailsResponse), StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> ReplyAsync(
         [FromRoute] Guid postId,
         [FromForm] PostRequests.ReplyPostRequest request,
@@ -115,7 +129,7 @@ public sealed class PostController : ApiController
         var result = await _replyPostCommandHandler.HandleAsync(command, cancellationToken);
 
         return result.IsSuccess
-            ? Created(nameof(GetByIdAsync), new { Id = result.Value })
+            ? CreatedAtRoute(GetByIdRouteName, new { Id = result.Value })
             : HandleFailure(result);
     }
 }

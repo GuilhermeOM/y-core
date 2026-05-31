@@ -10,7 +10,7 @@ using Y.Threads.Domain.Errors;
 
 namespace Y.Threads.Application.Threads.Queries.GetThreadById;
 
-internal sealed class GetThreadByIdQueryHandler : IQueryHandler<GetThreadByIdQuery, Models.Thread[]>
+internal sealed class GetThreadByIdQueryHandler : IQueryHandler<GetThreadByIdQuery, GetThreadByIdQueryResponse[]>
 {
     private readonly IThreadRepository _threadRepository;
 
@@ -19,12 +19,12 @@ internal sealed class GetThreadByIdQueryHandler : IQueryHandler<GetThreadByIdQue
         _threadRepository = threadRepository;
     }
 
-    public async Task<Result<Models.Thread[]>> HandleAsync(GetThreadByIdQuery request, CancellationToken cancellationToken = default)
+    public async Task<Result<GetThreadByIdQueryResponse[]>> HandleAsync(GetThreadByIdQuery request, CancellationToken cancellationToken = default)
     {
         var thread = await _threadRepository.GetByIdAndMaxDepthAsync(request.Id, request.MaxDepth, cancellationToken);
         if (!thread.Any())
         {
-            return Result.Failure<Models.Thread[]>(ThreadErrors.ThreadNotFound);
+            return Result.Failure<GetThreadByIdQueryResponse[]>(ThreadErrors.ThreadNotFound);
         }
 
         return Result.Success(thread.ToArray());
